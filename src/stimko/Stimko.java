@@ -2,7 +2,9 @@ package stimko;
 
 public class Stimko 
 {
-	
+	/**
+	 * Comment HELLO COMMIT
+	 */
 	public static void main(String[] args)
 	{
 				
