@@ -3,7 +3,7 @@ package stimko;
 public class Stimko 
 {
 	/**
-	 * Comment HELLO COMMIT
+	 * Comment HELLO COMMIT from PlayInteraction branch!
 	 */
 	public static void main(String[] args)
 	{
