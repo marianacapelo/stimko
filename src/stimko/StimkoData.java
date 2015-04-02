@@ -48,7 +48,7 @@ public class StimkoData
 	 * Board 1
 	 */
 	private ArrayList<ArrayList<Integer>> board;
-	
+
 	/**
 	 * Ordered Streams
 	 */
@@ -69,6 +69,7 @@ public class StimkoData
 		int j = 0;
 		for(i = 0 ; i < n ; i++) {
 			ArrayList<BoardCell> aux = new ArrayList<BoardCell>(n);
+			
 			for(j = 0; j< n; j++) {
 				BoardCell aux2 = new BoardCell(i,j);
 				aux.add(aux2);
@@ -86,11 +87,52 @@ public class StimkoData
 		this.n = n;
 	}
 	
+	public ArrayList<ArrayList<Integer>> getBoard() {
+		return board;
+	}
+
+	public void setBoard(ArrayList<ArrayList<Integer>> board) {
+		this.board = board;
+	}
+
 	public ArrayList<BoardCell> getStream(int n) {
 		
 		return this.streams.get(n);
 	}
 	
+	public ArrayList<BoardCell> findStream(int row, int col) {
+		
+		ArrayList<BoardCell> result = null;
+		for( ArrayList<StimkoData.BoardCell> stream : this.streams) {
+			
+			for(BoardCell cell : stream) {
+				if(cell.column == col && cell.row == row) {
+					result = stream; break;
+				}
+			}
+			if(result!= null) break;
+		}
+		return result;
+		
+	}
 	
-	
+
+	public BoardCell findNeighbor(int row, int col) {
+		
+		BoardCell neighbor = null;
+		boolean right_stream = false;
+		for( ArrayList<StimkoData.BoardCell> stream : this.streams) {
+			
+			for(BoardCell cell : stream) {
+				if(cell.column == col && cell.row == row) {
+					right_stream = true; continue;
+				}
+				if(right_stream) {
+					neighbor = cell; break;
+				}
+			}
+			if(right_stream) break;
+		}
+		return neighbor;
+	}
 }
