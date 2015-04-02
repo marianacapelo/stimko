@@ -14,32 +14,32 @@ public class Stimko
 				
 		System.out.println("YO");
 		smt = new SMTInteraction();
-		puzzle = new StimkoData(9);
+		puzzle = new StimkoData("/Users/Mariana/Documents/workspace/stimko/src/stimko/4x4Test.txt");
+		Output.printPuzzle(puzzle);
 		
-		
-		try {
-			
-			Output.printWelcome();
-//			Output.printInitialMenu();
-//			int opt = Input.readInt();
+//		try {
 //			
-//			while(opt!==0) {
+//			Output.printWelcome();
+////			Output.printInitialMenu();
+////			int opt = Input.readInt();
+////			
+////			while(opt!==0) {
+////				
+////				switch(opt) {
+////			
+////				case '1' : 
+//					smt.initStimko(puzzle);
+//					Output.printPuzzle(puzzle);
+//					
 //				
-//				switch(opt) {
-//			
-//				case '1' : 
-					smt.initStimko(puzzle);
-					Output.printPuzzle(puzzle);
-					
-				
-//				}
+////				}
 //			
 //			}
-			System.out.println("------");
-			
-		} catch(Exception e){
-			
-		}
+//			System.out.println("------");
+//			
+//		} catch(Exception e){
+//			
+//		}
 		
 	}
 

@@ -1,5 +1,8 @@
 package stimko;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -54,29 +57,69 @@ public class StimkoData
 	 */
 	private ArrayList<ArrayList<BoardCell>> streams;
 	
-	public StimkoData (int n) 
+	public StimkoData (String filename) 
 	{
-		this.n = n;
-		this.board = new ArrayList<ArrayList<Integer>>(n);
-		
-		for(ArrayList<Integer> aux : this.board) {
-			aux = new ArrayList<Integer>(n);
-		}
-		
-		this.streams = new ArrayList<ArrayList<BoardCell>>(n);
-		
-		int i;
-		int j = 0;
-		for(i = 0 ; i < n ; i++) {
-			ArrayList<BoardCell> aux = new ArrayList<BoardCell>(n);
+		int N = 0,Rcounter=0,Ccounter=0,auxval;
+		BufferedReader reader = null;
+		try{
+			String CurrentLine;
+			reader = new BufferedReader(new FileReader(filename));
 			
-			for(j = 0; j< n; j++) {
-				BoardCell aux2 = new BoardCell(i,j);
-				aux.add(aux2);
+			CurrentLine = reader.readLine();
+			if(CurrentLine == null){System.out.println("Documento de input inv�lido");}
+			N = Integer.parseInt(CurrentLine);
+			System.out.println("Tamanho de tabuleiro: "+N+"\n");
+			
+			ArrayList<ArrayList<Integer>> tab = new ArrayList<ArrayList<Integer>>(N);
+			ArrayList<ArrayList<BoardCell>> stream = new ArrayList<ArrayList<BoardCell>>(N);
+			
+			
+			while((CurrentLine = reader.readLine()) != null && Rcounter < N){
+				ArrayList<Integer> aux = new ArrayList<Integer>(N);
+				String[] values = CurrentLine.split(" ");
+				for(String v : values){
+					if(Ccounter >= N){break;}
+					auxval = Integer.parseInt(v);
+					aux.add(auxval);
+					Ccounter++;
+				}
+				Ccounter=0;
+				Rcounter++;
+				tab.add(aux);
 			}
-			this.streams.add(aux);
-		}
-		
+			for(Ccounter=0; Ccounter < N; Ccounter++){
+				ArrayList<BoardCell> aux = new ArrayList<BoardCell>(N);
+				stream.add(aux);
+			}
+			Rcounter=0;
+			Ccounter=0;
+			while(Rcounter < N){
+				String[] values = CurrentLine.split(" ");
+				for(String v : values){
+					if(Ccounter >= N){break;}
+					auxval = Integer.parseInt(v);
+					BoardCell auxB = new BoardCell(Rcounter,Ccounter);
+					ArrayList<BoardCell> temp = stream.get(auxval-1);
+					temp.add(auxB);
+					Ccounter++;
+				}
+				Ccounter = 0;
+				Rcounter++;
+				if((CurrentLine = reader.readLine()) == null){break;}
+			}
+	
+			this.n = N;
+			this.board = tab;
+			this.streams = stream;
+		}catch(IOException e){
+			e.printStackTrace();
+		}finally{
+			try{
+				if(reader != null)reader.close();
+			}catch (IOException e){
+				e.printStackTrace();
+			}
+		}		
 	}
 
 	public int getN() {
@@ -115,7 +158,6 @@ public class StimkoData
 		return result;
 		
 	}
-	
 
 	public BoardCell findNeighbor(int row, int col) {
 		
@@ -134,5 +176,28 @@ public class StimkoData
 			if(right_stream) break;
 		}
 		return neighbor;
+	}
+	
+	public String toString(){
+		String aux = "";
+		aux = aux + "Tabuleiro: \n";
+		aux = aux + "--------------------\n";
+		for(ArrayList<Integer> auxR : this.board){
+			for(int value : auxR){
+				aux = aux + "|" + value;
+			}
+			aux = aux + "|\n";
+		}
+		aux = aux + "--------------------\n";
+		aux = aux + "Streams:\n";
+		aux = aux + "--------------------\n";
+		for(ArrayList<BoardCell> auxB : this.streams){
+			for(BoardCell auxC : auxB){
+				aux = aux + "|" + auxC.getRow() + auxC.getColumn();
+			}
+			aux = aux + "|\n";
+		}
+		aux = aux + "--------------------\n";
+		return aux;
 	}
 }
