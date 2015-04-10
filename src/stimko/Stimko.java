@@ -40,6 +40,8 @@ public class Stimko
 		puzzle = new StimkoData("/Users/Mariana/Documents/workspace/stimko/src/stimko/4x4Test.txt");
 		Output.printPuzzle(puzzle);
 		
+		// Print nao funciona ... 
+		
 		String complete_command = Input.lerString();
 		int cmd = CMD_INVALID;
 		for(Integer key : commands.keySet()) {
