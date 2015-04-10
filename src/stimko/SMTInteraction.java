@@ -11,7 +11,11 @@ public class SMTInteraction
 	
 	private Context ctx;
 	
-	private Solver current_state;
+	private Solver current;
+
+	private Solver original;
+	
+	private IntExpr[][] positions;
 	
 	public SMTInteraction ()
 	{
@@ -24,17 +28,16 @@ public class SMTInteraction
 	
 	public void initStimko(StimkoData puzzle) throws Exception 
 	{
-		Context ctx = this.ctx;
 		// n x n matrix of integer variables
 		int n  = puzzle.getN();
-        IntExpr[][] X = new IntExpr[n][];
+        this.positions = new IntExpr[n][];
         for (int i = 0; i < n; i++)
         {
-            X[i] = new IntExpr[n];
+            this.positions[i] = new IntExpr[n];
             for (int j = 0; j < n; j++)
-                X[i][j] = (IntExpr) ctx.mkConst(
-                        ctx.mkSymbol("x_" + (i + 1) + "_" + (j + 1)),
-                        ctx.getIntSort());
+                this.positions[i][j] = (IntExpr) this.ctx.mkConst(
+                        this.ctx.mkSymbol("x_" + (i + 1) + "_" + (j + 1)),
+                        this.ctx.getIntSort());
         }
 
         // each cell contains a value in {1, ..., n}
@@ -43,19 +46,19 @@ public class SMTInteraction
         {
             cells_c[i] = new BoolExpr[n];
             for (int j = 0; j < n; j++)
-                cells_c[i][j] = ctx.mkAnd(ctx.mkLe(ctx.mkInt(1), X[i][j]),
-                        ctx.mkLe(X[i][j], ctx.mkInt(n)));
+                cells_c[i][j] = this.ctx.mkAnd(this.ctx.mkLe(this.ctx.mkInt(1), this.positions[i][j]),
+                        this.ctx.mkLe(this.positions[i][j], this.ctx.mkInt(n)));
         }
 		
         // each row contains a digit at most once
         BoolExpr[] rows_c = new BoolExpr[n];
         for (int i = 0; i < n; i++)
-            rows_c[i] = ctx.mkDistinct(X[i]);
+            rows_c[i] = this.ctx.mkDistinct(this.positions[i]);
 
         // each column contains a digit at most once
         BoolExpr[] cols_c = new BoolExpr[n];
         for (int j = 0; j < n; j++)
-            cols_c[j] = ctx.mkDistinct(X[j]);
+            cols_c[j] = this.ctx.mkDistinct(this.positions[j]);
 
         // each stream contains a digit at most once
         BoolExpr[] streams_c = new BoolExpr[n];
@@ -73,21 +76,21 @@ public class SMTInteraction
             	int row = current_cell.getRow();
             	int column = current_cell.getColumn();
             	
-            	cells_stream[j0] = X[row][column];
+            	cells_stream[j0] = this.positions[row][column];
             }
             
-            streams_c[i0] = ctx.mkDistinct(cells_stream);
+            streams_c[i0] = this.ctx.mkDistinct(cells_stream);
         }
         
-        BoolExpr stimko_c = ctx.mkTrue();
+        BoolExpr stimko_c = this.ctx.mkTrue();
         for (BoolExpr[] t : cells_c)
-        	stimko_c = ctx.mkAnd(ctx.mkAnd(t), stimko_c);
+        	stimko_c = this.ctx.mkAnd(this.ctx.mkAnd(t), stimko_c);
         
-        stimko_c = ctx.mkAnd(ctx.mkAnd(rows_c), stimko_c);
+        stimko_c = this.ctx.mkAnd(this.ctx.mkAnd(rows_c), stimko_c);
         
-        stimko_c = ctx.mkAnd(ctx.mkAnd(cols_c), stimko_c);
+        stimko_c = this.ctx.mkAnd(this.ctx.mkAnd(cols_c), stimko_c);
         
-        stimko_c = ctx.mkAnd(ctx.mkAnd(streams_c), stimko_c);
+        stimko_c = this.ctx.mkAnd(this.ctx.mkAnd(streams_c), stimko_c);
 
         //Read from puzzle TODO
         // stimko instance, we use '0' for empty cells
@@ -98,43 +101,38 @@ public class SMTInteraction
                 { 9, 0, 0, 0, 6, 5, 0, 0, 0 }, { 0, 4, 0, 9, 7, 0, 0, 0, 0 } };
 
         
-        BoolExpr instance_c = ctx.mkTrue();
+        BoolExpr instance_c = this.ctx.mkTrue();
         for (int i = 0; i < 9; i++)
             for (int j = 0; j < 9; j++)
-                instance_c = ctx.mkAnd(
+                instance_c = this.ctx.mkAnd(
                         instance_c,
-                        (BoolExpr) ctx.mkITE(
-                                ctx.mkEq(ctx.mkInt(instance[i][j]),
-                                        ctx.mkInt(0)), ctx.mkTrue(),
-                                ctx.mkEq(X[i][j], ctx.mkInt(instance[i][j]))));
+                        (BoolExpr) this.ctx.mkITE(
+                                this.ctx.mkEq(this.ctx.mkInt(instance[i][j]),
+                                        this.ctx.mkInt(0)), this.ctx.mkTrue(),
+                                this.ctx.mkEq(this.positions[i][j], this.ctx.mkInt(instance[i][j]))));
 
-        Solver s = ctx.mkSolver();
+        Solver s = this.ctx.mkSolver();
         s.add(stimko_c);
         s.add(instance_c);
-        this.current_state = s;
-        
-//        System.out.println(stimko_c);
-        
-//        if (s.check() == Status.SATISFIABLE)
-//        {
-//            Model m = s.getModel();
-//            Expr[][] R = new Expr[9][9];
-//            for (int i = 0; i < 9; i++)
-//                for (int j = 0; j < 9; j++)
-//                    R[i][j] = m.evaluate(X[i][j], false);
-//            System.out.println("stimko solution:");
-//            for (int i = 0; i < 9; i++)
-//            {
-//                for (int j = 0; j < 9; j++)
-//                    System.out.print(" " + R[i][j]);
-//                System.out.println();
-//            }
-//        } else
-//        {
-//            System.out.println("Failed to solve stimko");
-//            throw new Exception();
-//        }
+        s.push();
+        this.current = s;
+        this.original = s;
 		
+	}
+	
+	public void play(int row,int column,int value) throws Z3Exception
+	{    
+	        
+		IntExpr position = this.positions[row-1][column-1];
+		BoolExpr play_c = this.ctx.mkTrue();
+		play_c = this.ctx.mkAnd(this.ctx.mkEq(this.ctx.mkInt(value), position));
+		current.add(play_c);
+		current.push();
+	}
+	
+	public void undo() throws Z3Exception
+	{
+		this.current.pop();
 	}
 	
 	

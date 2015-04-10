@@ -24,6 +24,11 @@ public class Output {
     	System.out.println("\n\nWelcome to Stimko\n\n");
     }
     
+    public static void printInvalidInput()
+    {
+    	System.out.println("\nInvalid input. Please re-enter command\n");
+    }
+    
     public static void printMainMenu() 
     {
     	System.out.println("\nChoose an option");
@@ -46,17 +51,24 @@ public class Output {
     	for(i=0; i<n ; i++) {
     		//Iterate over rows
     	
+    		if(i==0) {
+        		sb.append("  ");
+    			for(k=0; k<n ; k++) 
+	    			sb.append("_") ; 
+	    		sb.append('\n');
+    		}
+
     		sb.append(" ");
-    		if(i==0)
-	    		for(k=0; k<n ; k++) 
-	    			sb.append("_") ;                       
-    		
+
     		ArrayList<Integer> row = board.get(i);
+
     		for(j=0 ; j<n ; j++) {
     			//Iterate over columns
-    			if(j==0) sb.append("|");
+    			if(j==0) { sb.append("|"); row_separator.append('\n'); }
     			
     			int value = (int) row.get(j);
+    			sb.append(value);
+
     			StimkoData.BoardCell neighbor = puzzle.findNeighbor(i, j);
     			if(neighbor!=null) {
     				int neighbor_row = neighbor.getRow();
@@ -66,12 +78,15 @@ public class Output {
     				if(neighbor_row == i) {
     					//Check if to the left or to the right
     					if(neighbor_col == (j-1) ) {
-    						sb.append('-'+value+' ');
-    						row_separator.append("   ");
+    						sb.append('-');
+    						sb.append(value);
+    						sb.append(' ');
     					} else if(neighbor_col == (j+1)) {
-    						sb.append(' '+value+'-');
-    						sb.append(' '+value+' ');
-    					}
+    						sb.append(' ');
+    						sb.append(value);
+    						sb.append('-');
+						}
+						row_separator.append("   ");
     				} else {
     					//Neighbor is in the next row
     					int orientation = neighbor_col - j;
@@ -87,10 +102,20 @@ public class Output {
     					}
 						sb.append(' '+value+' ');
     				}
+    				System.out.println("uma coluna....!:");;
+    	        	System.out.println(sb.toString());
+    	        	System.out.println(row_separator.toString());
     			}
     			
     		}
-    		sb.append(row_separator.toString());
+    		
+    		row_separator.append('\n');
+        	System.out.println("uma linha!:");;
+        	System.out.println(sb.toString());
+        	System.out.println(row_separator.toString());
+
+
+    		sb.append(row_separator.toString()+"\n");
     		row_separator = new StringBuilder();
     	}
     	

@@ -3,7 +3,10 @@ package stimko;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.*;
+import java.math.*;
+
+import stimko.StimkoData.BoardCell;
 
 
 public class StimkoData 
@@ -41,6 +44,9 @@ public class StimkoData
 			this.column = column;
 		}
 		
+		public boolean equals(BoardCell b){
+			return b.getRow()==this.getRow() && b.getColumn()==this.getColumn();
+		}
 	}
 	/**
 	 * Size of board
@@ -56,6 +62,60 @@ public class StimkoData
 	 * Ordered Streams
 	 */
 	private ArrayList<ArrayList<BoardCell>> streams;
+	
+	public BoardCell findStartCell(HashMap<BoardCell,ArrayList<BoardCell>> viz){
+		int ns = 99999999,counter;
+		BoardCell ret = null;
+		for(BoardCell key : viz.keySet()){
+			counter = 0;
+			ArrayList<BoardCell> auxV = viz.get(key);
+			for(BoardCell auxB : auxV){
+				counter++;
+			}
+			if(counter < ns){
+				ns = counter;
+				ret = key;
+			}
+			counter = 0;
+		}
+		return ret;
+	}
+	
+	public ArrayList<ArrayList<BoardCell>> organizeStream(int n, ArrayList<ArrayList<BoardCell>> st){
+		ArrayList<ArrayList<BoardCell>> ret = new ArrayList<ArrayList<BoardCell>>(n);
+		int Scounter;
+		//Organiza por Streams
+		for(ArrayList<BoardCell> aux : st){
+			Scounter = 0;
+			HashMap<BoardCell,ArrayList<BoardCell>> viz = new HashMap<BoardCell,ArrayList<BoardCell>>(n);
+			ArrayList<BoardCell> finalS = new ArrayList<BoardCell>();
+			for(BoardCell auxB : aux){
+				ArrayList<BoardCell> auxv = new ArrayList<BoardCell>();
+				for(BoardCell auxC : aux){
+					if(auxB.getColumn() == auxC.getColumn() && auxB.getRow() == auxC.getRow()){continue;}
+					if((Math.abs(auxB.getColumn()-auxC.getColumn())) <= 1 && (Math.abs(auxB.getRow()-auxC.getRow())) <= 1){
+						auxv.add(auxC);
+					}
+				}
+				viz.put(auxB, auxv);
+			}
+			BoardCell start = findStartCell(viz);
+			while(Scounter < n-1){
+				ArrayList<BoardCell> auxv = viz.get(start);
+				BoardCell pair = auxv.get(0);
+				finalS.add(start);
+				Scounter++;
+				for(ArrayList<BoardCell> auxB : viz.values()){
+					auxB.remove(start);
+				}
+				start = pair;
+			}
+			finalS.add(start);
+			ret.add(finalS);
+		}
+		
+		return ret;
+	}
 	
 	public StimkoData (String filename) 
 	{
@@ -107,6 +167,8 @@ public class StimkoData
 				Rcounter++;
 				if((CurrentLine = reader.readLine()) == null){break;}
 			}
+			
+			stream = organizeStream(N, stream);
 	
 			this.n = N;
 			this.board = tab;
