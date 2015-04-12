@@ -135,8 +135,14 @@ public class SMTInteraction
 		IntExpr position = this.original_positions[row-1][column-1];
 		BoolExpr play_c = this.ctx.mkTrue();
 		play_c = this.ctx.mkAnd(this.ctx.mkEq(this.ctx.mkInt(value), position));
+		
+//		IntExpr number = this.ctx
+//                .mkInt(value);
+//		play_c = this.ctx.mkEq(number, position);
+		
 		this.current_solver.add(play_c);
 		this.current_solver.push();
+		
 	}
 	
 	public void undo() throws Z3Exception
