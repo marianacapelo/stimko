@@ -36,7 +36,7 @@ public class Output {
     	System.out.println("\n2\tChoose puzzle");
         System.out.print("\n\n0\tExit ");
 
-        System.out.print("\t\t\t\t > ");
+        System.out.print("\n > ");
     }
     
     public static void printPuzzle(StimkoData puzzle)
@@ -56,18 +56,20 @@ public class Output {
     			for(k=0; k<n ; k++) 
 	    			sb.append("_") ; 
 	    		sb.append('\n');
+	    		row_separator.append('\n');
     		}
 
     		sb.append(" ");
+    		row_separator.append(" ");
 
     		ArrayList<Integer> row = board.get(i);
 
     		for(j=0 ; j<n ; j++) {
     			//Iterate over columns
-    			if(j==0) { sb.append("|"); row_separator.append('\n'); }
+    			if(j==0) { sb.append("|"); row_separator.append('|'); }
     			
     			int value = (int) row.get(j);
-    			sb.append(value);
+
 
     			StimkoData.BoardCell neighbor = puzzle.findNeighbor(i, j);
     			if(neighbor!=null) {
@@ -100,21 +102,15 @@ public class Output {
     					case 1:
     						row_separator.append("  \\");
     					}
-						sb.append(' '+value+' ');
+						sb.append(' '); sb.append(value); sb.append(' ');
     				}
-    				System.out.println("uma coluna....!:");;
-    	        	System.out.println(sb.toString());
-    	        	System.out.println(row_separator.toString());
     			}
     			
     		}
     		
-    		row_separator.append('\n');
-        	System.out.println("uma linha!:");;
-        	System.out.println(sb.toString());
-        	System.out.println(row_separator.toString());
-
-
+    		sb.append("|"); row_separator.append('|');
+//    		row_separator.append('\n');
+        	
     		sb.append(row_separator.toString()+"\n");
     		row_separator = new StringBuilder();
     	}

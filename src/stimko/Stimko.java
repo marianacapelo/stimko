@@ -2,6 +2,13 @@ package stimko;
 
 import java.util.*;
 
+import print.Printer;
+import print.Printer.Types;
+import print.color.ColoredPrinter;
+import print.color.Ansi.*;
+import print.exception.InvalidArgumentsException;
+
+
 public class Stimko 
 {
 	
@@ -34,13 +41,24 @@ public class Stimko
 		commands.put(CMD_HELP, "help");
 		commands.put(CMD_CHECK, "check");
 		
+		
+		ColoredPrinter cp = new ColoredPrinter.Builder(1, false)
+						        .foreground(FColor.WHITE).background(BColor.BLUE)   
+						        //setting format
+						        .build();
+		
+		cp.println("HEELLLO",Attribute.BOLD, FColor.BLUE, BColor.BLUE);
+		cp.clear();
+		
 		try {
 		System.out.println("YO");
 		smt = new SMTInteraction();
 		puzzle = new StimkoData("/Users/Mariana/Documents/workspace/stimko/src/stimko/4x4Test.txt");
-		Output.printPuzzle(puzzle);
+		System.out.println(puzzle);
 		
+		Output.printPuzzle(puzzle);
 		// Print nao funciona ... 
+
 		
 		String complete_command = Input.lerString();
 		int cmd = CMD_INVALID;

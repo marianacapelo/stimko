@@ -133,6 +133,7 @@ public class SMTInteraction
 	public void undo() throws Z3Exception
 	{
 		this.current.pop();
+		this.current.push();
 	}
 	
 	
