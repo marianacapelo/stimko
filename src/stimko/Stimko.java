@@ -18,11 +18,12 @@ public class Stimko
 	public static HashMap<Integer,String> commands;
 	public static int CMD_EXIT = 0;
 	public static int CMD_PLAY = 1;
-	public static int CMD_RESTART = 2;
-	public static int CMD_TIP = 3;
-	public static int CMD_MMENU = 4;
-	public static int CMD_HELP = 5;
-	public static int CMD_CHECK = 6;
+	public static int CMD_UNDO = 2;
+	public static int CMD_RESTART = 3;
+	public static int CMD_TIP = 4;
+	public static int CMD_MMENU = 5;
+	public static int CMD_HELP = 6;
+	public static int CMD_CHECK = 7;
 	public static int CMD_INVALID = 10000;
 	
 	/**
@@ -35,6 +36,7 @@ public class Stimko
 		commands = new HashMap<Integer,String>();
 		commands.put(CMD_EXIT, "exit");
 		commands.put(CMD_PLAY, "play");
+		commands.put(CMD_UNDO, "undo");
 		commands.put(CMD_RESTART, "restart");
 		commands.put(CMD_TIP, "tip");
 		commands.put(CMD_MMENU,"main menu");
@@ -56,10 +58,11 @@ public class Stimko
 		puzzle = new StimkoData("/Users/Mariana/Documents/workspace/stimko/src/stimko/4x4Test.txt");
 		System.out.println(puzzle);
 		
-		Output.printPuzzle(puzzle);
+		smt.initStimko(puzzle);
+		//Output.printPuzzle(puzzle);
 		// Print nao funciona ... 
 
-		
+		System.out.println("Write command!");
 		String complete_command = Input.lerString();
 		int cmd = CMD_INVALID;
 		for(Integer key : commands.keySet()) {
@@ -67,34 +70,80 @@ public class Stimko
 			String command = commands.get(key);
 			if(complete_command.startsWith(command)) {
 				cmd = key;
-				complete_command.substring(command.length());
+				complete_command = complete_command.substring(command.length());
 				break;
 			}
 			
 		}
+		System.out.println("got "+cmd);
 		
-		if(cmd == CMD_INVALID) {
-			Output.printInvalidInput();
-		}
+
+		boolean valid_play;
 		
-		switch(cmd) {
+		while (cmd != CMD_EXIT) {
 			
-			case 1:
-				//Expected to find 3 integers
-				complete_command.replaceAll("[^0-9]+", " ");
-				String[] inputs = complete_command.trim().split(" ");
+			if(cmd == CMD_INVALID) {
+				Output.printInvalidInput();
+			}
+			switch(cmd) {
 				
-				if(inputs.length != 3) { cmd = CMD_INVALID; break;}
+				case 1:
+					//Expected to find 3 integers
+					complete_command.replaceAll("[^0-9]+", " ");
+					String[] inputs = complete_command.trim().split(" ");
+					
+					for(int i = 0 ; i<inputs.length ; i++) System.out.println(inputs[i]);
+//					System.out.println("splitted into "+inputs.length);
+					if(inputs.length != 3) { cmd = CMD_INVALID; break;}
+					
+					int row = Integer.parseInt(inputs[0]);
+					int column = Integer.parseInt(inputs[1]);
+					int value = Integer.parseInt(inputs[2]);
+					
+//					System.out.println(" playing "+row+" "+column + " "+ value);
+					valid_play = puzzle.play(row, column, value);
+//					System.out.println(valid_play);
+					if(!valid_play) {
+						Output.printInvalidPlay();
+					} else {
+						smt.play(row,column,value);
+						System.out.println(puzzle);
+					}
+					break;
+					
+				case 2:
+					//No extra inputs expected
+					
+					valid_play = puzzle.undo();
+					if(!valid_play) {
+						Output.printInvalidPlay();
+					} else {
+						smt.undo();
+						System.out.println(puzzle);
+					}
+					break;
+					
+				case 7 : 
+					smt.solveStimko(puzzle);
+					break;
+					
+			}
+			
+			System.out.println("Write command!");
+			complete_command = Input.lerString();
+			cmd = CMD_INVALID;
+			for(Integer key : commands.keySet()) {
 				
-				int row = Integer.parseInt(inputs[0]);
-				int column = Integer.parseInt(inputs[1]);
-				int value = Integer.parseInt(inputs[2]);
+				String command = commands.get(key);
+				if(complete_command.startsWith(command)) {
+					cmd = key;
+					complete_command = complete_command.substring(command.length());
+					break;
+				}
 				
-				smt.play(row,column,value);
-				
-				break;
-		}
+			}
 		
+		}
 		
 		
 		

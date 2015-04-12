@@ -29,6 +29,11 @@ public class Output {
     	System.out.println("\nInvalid input. Please re-enter command\n");
     }
     
+    public static void printInvalidPlay()
+    {
+    	System.out.println("\nInvalid play. Please re-enter command\n");
+    }
+    
     public static void printMainMenu() 
     {
     	System.out.println("\nChoose an option");

@@ -46,6 +46,48 @@ public class StimkoData
 			return b.getRow()==this.getRow() && b.getColumn()==this.getColumn();
 		}
 	}
+	
+	
+	public class BoardCellValue 
+	{
+		private int value;
+		private BoardCell cell;
+		
+		public BoardCellValue(int a, int b, int c)
+		{
+			this.cell = new BoardCell(a,b);
+			this.value = c;
+		}
+
+		public int getRow() {
+			return cell.getRow();
+		}
+
+		public void setRow(int row) {
+			this.cell.setRow(row); 
+		}
+
+		public int getColumn() {
+			return this.cell.getColumn();
+		}
+
+		public void setColumn(int column) {
+			this.cell.setColumn(column); 
+		}
+		
+		public int getValue() {
+			return this.value;
+		}
+		
+		public void setValue(int v) {
+			this.value = v;
+		}
+		public boolean equals(BoardCellValue b){
+			return b.getRow()==this.getRow() && b.getColumn()==this.getColumn() && this.getValue() == b.getValue();
+		}
+	}
+	
+	
 	/**
 	 * Size of board
 	 */
@@ -60,6 +102,11 @@ public class StimkoData
 	 * Ordered Streams
 	 */
 	private ArrayList<ArrayList<BoardCell>> streams;
+	
+	private ArrayList<BoardCellValue> play_history;
+	
+	private ArrayList<ArrayList<Integer>> original_board;
+
 	
 	public BoardCell findStartCell(HashMap<BoardCell,ArrayList<BoardCell>> viz){
 		int ns = 99999999,counter;
@@ -169,9 +216,18 @@ public class StimkoData
 			
 			stream = organizeStream(N, stream);
 	
+			ArrayList<ArrayList<Integer>> tab_clone = new ArrayList<ArrayList<Integer>>(N);
+			for(ArrayList<Integer> rows : tab) {
+				ArrayList<Integer> rows_clone = new ArrayList<Integer>();
+				for(Integer vals : rows)
+					rows_clone.add(vals);
+				tab_clone.add(rows_clone);	
+			}
 			this.n = N;
 			this.board = tab;
+			this.original_board = tab_clone;
 			this.streams = stream;
+			this.play_history = new ArrayList<BoardCellValue>();
 		}catch(IOException e){
 			e.printStackTrace();
 		}finally{
@@ -260,5 +316,53 @@ public class StimkoData
 		}
 		aux = aux + "--------------------\n";
 		return aux;
+	}
+	
+	public boolean play(int row, int column, int value) {
+		
+		boolean valid_play = false;
+		row--;
+		column--;
+		
+		//Check if play does not change original board values
+		if(row < n  && column < n) {
+			Integer original_position = this.original_board.get(row).get(column);
+			if((int)original_position == 0) 
+				valid_play = true;
+		}
+		
+		if(valid_play) {
+			Integer position = this.board.get(row).get(column);
+			//Store previous value of the cell
+			int old_value = (int) position;
+			BoardCellValue history = new BoardCellValue(row,column,old_value);
+			this.play_history.add(history);
+			
+			//Change value of cell of board
+			this.board.get(row).set(column, value);
+		}
+		return valid_play;
+	}
+	
+	public boolean undo() 
+	{
+		boolean valid_play = false;
+		
+		if(!this.play_history.isEmpty()) {
+			//Fetch last cell played
+			BoardCellValue last = this.play_history.get(this.play_history.size() - 1);
+			int row = last.getRow();
+			int column = last.getColumn();
+			int value = last.getValue();
+			System.out.println("undoing "+row+" "+column + " " + value);
+			
+			this.board.get(row).set(column, value);
+			this.play_history.remove(this.play_history.size() - 1);
+			
+			valid_play = true;
+			
+		}
+		
+		return valid_play;
 	}
 }
