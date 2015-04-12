@@ -70,7 +70,7 @@ public class StimkoData
 			for(BoardCell auxB : auxV){
 				counter++;
 			}
-			if(counter < ns){
+			if(counter <= ns){
 				ns = counter;
 				ret = key;
 			}
@@ -98,7 +98,8 @@ public class StimkoData
 				viz.put(auxB, auxv);
 			}
 			BoardCell start = findStartCell(viz);
-			while(Scounter < n-1){
+			Scounter++;
+			while(Scounter < n){
 				ArrayList<BoardCell> auxv = viz.get(start);
 				BoardCell pair = auxv.get(0);
 				finalS.add(start);
@@ -124,9 +125,9 @@ public class StimkoData
 			reader = new BufferedReader(new FileReader(filename));
 			
 			CurrentLine = reader.readLine();
-			if(CurrentLine == null){System.out.println("Documento de input inv�lido");}
+			if(CurrentLine == null){System.out.println("Documento de input inv�lido"); return;}
 			N = Integer.parseInt(CurrentLine);
-			System.out.println("Tamanho de tabuleiro: "+N+"\n");
+			//System.out.println("Tamanho de tabuleiro: "+N+"\n");
 			
 			ArrayList<ArrayList<Integer>> tab = new ArrayList<ArrayList<Integer>>(N);
 			ArrayList<ArrayList<BoardCell>> stream = new ArrayList<ArrayList<BoardCell>>(N);
