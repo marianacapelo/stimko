@@ -125,7 +125,7 @@ public class StimkoData
 			reader = new BufferedReader(new FileReader(filename));
 			
 			CurrentLine = reader.readLine();
-			if(CurrentLine == null){System.out.println("Documento de input inv�lido"); return;}
+			if(CurrentLine == null){System.out.println("Documento de input invalido"); return;}
 			N = Integer.parseInt(CurrentLine);
 			//System.out.println("Tamanho de tabuleiro: "+N+"\n");
 			
@@ -260,5 +260,109 @@ public class StimkoData
 		}
 		aux = aux + "--------------------\n";
 		return aux;
+	}
+	
+	public String checkSideConn(int row, int col){
+		int inds = -1, indb = -1;
+		for(ArrayList<BoardCell> stream : this.streams){
+			for(BoardCell bc : stream){
+				if(bc.getRow()==row && bc.getColumn()==col){
+					indb = stream.indexOf(bc);
+					inds = streams.indexOf(stream);
+				}
+			}
+		}
+		ArrayList<BoardCell> auxs = streams.get(inds);
+		if(indb != -1){
+			if(indb!=0){
+				BoardCell aux2 = auxs.get(indb-1);
+				if(aux2.getColumn()==col+1 && aux2.getRow()==row) return "-";
+			}
+			if(indb!=n-1){
+				BoardCell aux2 = auxs.get(indb+1);
+				if(aux2.getColumn()==col+1 && aux2.getRow()==row) return "-";
+			}	
+		}
+		return " ";
+	}
+	
+	public String checkVertConn(int row, int col){
+		int inds = -1, indb = -1;
+		for(ArrayList<BoardCell> stream : this.streams){
+			for(BoardCell bc : stream){
+				if(bc.getRow()==row && bc.getColumn()==col){
+					indb = stream.indexOf(bc);
+					inds = streams.indexOf(stream);
+				}
+			}
+		}
+		ArrayList<BoardCell> auxs = streams.get(inds);
+		if(indb != -1){
+			if(indb!=0){
+				BoardCell aux2 = auxs.get(indb-1);
+				if(aux2.getColumn()==col && aux2.getRow()==row+1) return "|";
+			}
+			if(indb!=n-1){
+				BoardCell aux2 = auxs.get(indb+1);
+				if(aux2.getColumn()==col && aux2.getRow()==row+1) return "|";
+			}	
+		}
+		return " ";
+	}
+	
+	public String check4WayConn(int row, int col){
+		boolean con1 = false, con2 = false;
+		int inds = -1, indb = -1;
+		for(ArrayList<BoardCell> stream : this.streams){
+			for(BoardCell bc : stream){
+				if(bc.getRow()==row && bc.getColumn()==col){
+					indb = stream.indexOf(bc);
+					inds = streams.indexOf(stream);
+				}
+			}
+		}
+		ArrayList<BoardCell> auxs = streams.get(inds);
+		if(indb != -1){
+			if(indb!=0){
+				BoardCell aux2 = auxs.get(indb-1);
+				if(aux2.getColumn()==col+1 && aux2.getRow()==row+1) con1 = true;
+			}
+			if(indb!=n-1){
+				BoardCell aux2 = auxs.get(indb+1);
+				if(aux2.getColumn()==col+1 && aux2.getRow()==row+1) con1 = true;
+			}	
+		}
+		inds = -1; indb = -1;
+		row++;
+		for(ArrayList<BoardCell> stream : this.streams){
+			for(BoardCell bc : stream){
+				if(bc.getRow()==row && bc.getColumn()==col){
+					indb = stream.indexOf(bc);
+					inds = streams.indexOf(stream);
+				}
+			}
+		}
+		ArrayList<BoardCell> auxs2 = streams.get(inds);
+		if(indb != -1){
+			if(indb!=0){
+				BoardCell aux2 = auxs2.get(indb-1);
+				if(aux2.getColumn()==col+1 && aux2.getRow()==row-1) con2 = true;
+			}
+			if(indb!=n-1){
+				BoardCell aux2 = auxs2.get(indb+1);
+				if(aux2.getColumn()==col+1 && aux2.getRow()==row-1) con2 = true;
+			}	
+		}
+		
+		if(con1){
+			if(con2){
+				return "X";
+			}
+			else return "\\";
+		}
+		if(con2){
+			return "/";
+		}
+		else return " ";
 	}
 }

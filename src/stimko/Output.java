@@ -38,6 +38,34 @@ public class Output {
 
         System.out.print("\n > ");
     }
+        
+    public static void drawPuzzle(StimkoData puzzle){
+    	String res = "";
+    	int row = 0, col = 0, n = puzzle.getN();
+    	for(ArrayList<Integer> rowVal : puzzle.getBoard()){
+    		col = 0;
+    		for(Integer colVal : rowVal){
+    			if(colVal!=0)
+    				res = res + colVal;
+    			else
+    				res = res + "?";
+    			if(col < n-1) res = res + puzzle.checkSideConn(row,col);
+    			col++;
+    		}
+    		res = res + "\n";
+    		if(row < n-1){
+    			col = 0;
+    			for(Integer colVal : rowVal){
+    				res = res + puzzle.checkVertConn(row,col);
+        			if(col < n-1) res = res + puzzle.check4WayConn(row,col);
+        			col++;
+        		}
+    			res = res + "\n";
+    		}
+    		row++;
+    	}
+    	System.out.println(res);
+    }
     
     public static void printPuzzle(StimkoData puzzle)
     {
