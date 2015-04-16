@@ -120,11 +120,9 @@ public class SMTInteraction
                                         this.ctx.mkInt(0)), this.ctx.mkTrue(),
                                 this.ctx.mkEq(this.original_positions[i][j], this.ctx.mkInt(instance[i][j]))));
 
-        System.out.println("init!");
         Solver s = this.ctx.mkSolver();
         s.add(stimko_c);
         s.add(instance_c);
-        s.push();
         this.current_solver = s;
         this.original_solver = s;
 		
@@ -134,14 +132,14 @@ public class SMTInteraction
 	{    
 		IntExpr position = this.original_positions[row-1][column-1];
 		BoolExpr play_c = this.ctx.mkTrue();
-		play_c = this.ctx.mkAnd(this.ctx.mkEq(this.ctx.mkInt(value), position));
 		
-//		IntExpr number = this.ctx
-//                .mkInt(value);
-//		play_c = this.ctx.mkEq(number, position);
+		IntExpr number = this.ctx
+                .mkInt(value);
+		play_c = this.ctx.mkEq(number, position);
 		
-		this.current_solver.add(play_c);
 		this.current_solver.push();
+		this.current_solver.add(play_c);
+	
 		
 	}
 	
@@ -154,16 +152,14 @@ public class SMTInteraction
 		System.out.println("after pop");
 		System.out.println(this.current_solver);
 
-		this.current_solver.push();
-		System.out.println("after push");
-		System.out.println(this.current_solver);
-
-		
 	}
 	
-	
+	public void reset() throws Z3Exception
+	{
+		this.current_solver = this.original_solver;
+	}
 	//TODO solveStimko returning puzzle solved and 
-	public void solveStimko(StimkoData puzzle) throws Exception 
+	public boolean solveStimko(StimkoData puzzle) throws Z3Exception 
 	{   
 		System.out.println(this.current_solver);
         if (this.current_solver.check() == Status.SATISFIABLE)
@@ -174,18 +170,9 @@ public class SMTInteraction
             for (int i = 0; i < n; i++)
                 for (int j = 0; j < n; j++)
                     solution[i][j] = m.evaluate(this.original_positions[i][j], false);
-            System.out.println("stimko solution:");
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < n; j++)
-                    System.out.print(" " + solution[i][j]);
-                System.out.println();
-            }
-        } else
-        {
-            System.out.println("Failed to solve stimko");
-            throw new Exception();
-        }
+            return true;
+        } 
+        return false;
 		
 	}
 	
@@ -309,7 +296,6 @@ public class SMTInteraction
             throw new Exception();
         }
 	}
-	
 	
 
 }

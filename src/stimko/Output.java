@@ -123,4 +123,13 @@ public class Output {
     	System.out.println(sb.toString());
     }
     
+    public static void printCheck(boolean ok)
+    {
+    	if(ok) {
+    		System.out.println("\tSo far so good");
+    	} else {
+    		System.out.println("\tSomething is wrong");
+    	}
+    }
+    
 }

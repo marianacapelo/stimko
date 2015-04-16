@@ -20,7 +20,7 @@ public class Stimko
 	public static int CMD_PLAY = 1;
 	public static int CMD_UNDO = 2;
 	public static int CMD_RESTART = 3;
-	public static int CMD_TIP = 4;
+	public static int CMD_HINT = 4;
 	public static int CMD_MMENU = 5;
 	public static int CMD_HELP = 6;
 	public static int CMD_CHECK = 7;
@@ -34,15 +34,15 @@ public class Stimko
 				
 		// -- Initialize commands --
 		commands = new HashMap<Integer,String>();
-		commands.put(CMD_EXIT, "exit");
-		commands.put(CMD_PLAY, "play");
-		commands.put(CMD_UNDO, "undo");
-		commands.put(CMD_RESTART, "restart");
-		commands.put(CMD_TIP, "tip");
+		commands.put(CMD_EXIT, "exit"); 
+		commands.put(CMD_PLAY, "play");	//done
+		commands.put(CMD_UNDO, "undo");	//done
+		commands.put(CMD_RESTART, "restart");	//done
+		commands.put(CMD_HINT, "hint");		
 		commands.put(CMD_MMENU,"main menu");
 		commands.put(CMD_HELP, "help");
-		commands.put(CMD_CHECK, "check");
-		
+		commands.put(CMD_CHECK, "check");	//done
+		//gerar
 		
 		ColoredPrinter cp = new ColoredPrinter.Builder(1, false)
 						        .foreground(FColor.WHITE).background(BColor.BLUE)   
@@ -79,6 +79,9 @@ public class Stimko
 		
 
 		boolean valid_play;
+		StimkoData.BoardCell hint_cell = null;
+		StimkoData.BoardCellValue hint_cell_value = null;
+		int hint_level = 0;
 		
 		while (cmd != CMD_EXIT) {
 			
@@ -123,8 +126,29 @@ public class Stimko
 					}
 					break;
 					
+				case 3 :
+					
+					puzzle.reset();
+					smt.reset();
+					
+					System.out.println(puzzle);
+					break;
+					
+				case 4 :
+					
+					
+//					StimkoData.BoardCell new_hint_cell = puzzle.hint(hint_cell);
+//					if(new_hint_cell == hint_cell) {
+//						hint_level++;
+//					} else {
+//						hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn());
+//						hint_cell = new_hint_cell;
+//					}
+//					Output.printHint(hint_cell_value,hint_level);
+					
+					break;
 				case 7 : 
-					smt.solveStimko(puzzle);
+					Output.printCheck(smt.solveStimko(puzzle));
 					break;
 					
 			}

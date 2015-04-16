@@ -365,4 +365,34 @@ public class StimkoData
 		
 		return valid_play;
 	}
+	
+	public void reset() 
+	{
+		this.board = this.original_board;
+		this.play_history = new ArrayList<StimkoData.BoardCellValue>();
+	}
+	
+//	public BoardCell hint(BoardCell old_hint_cell) 
+//	{
+//		if( !old_hint_cell || old_hint_cell filled in board) {
+//			int x = random(1,2,3);
+//			return findEasiest(x);
+//		} else {
+//		return old_hint_cell;
+//		}
+//		
+//	}
+//	
+//	public BoardCell findEasiest(int x)
+//	{
+//	
+//		if(x==1) {
+//			int min = this.n;
+//			ArrayList<Integer> right_col = null;
+//			for(ArrayList<Integer> row : )
+//			//Find column with least zeros
+//			row = random das posições com zero
+//			return BoardCell(row,col);
+//		}
+//	}
 }
