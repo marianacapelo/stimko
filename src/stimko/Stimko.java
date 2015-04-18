@@ -7,6 +7,7 @@ import print.Printer.Types;
 import print.color.ColoredPrinter;
 import print.color.Ansi.*;
 import print.exception.InvalidArgumentsException;
+import stimko.StimkoData.BoardCell;
 
 
 public class Stimko 
@@ -136,19 +137,19 @@ public class Stimko
 					
 				case 4 :
 					
-					
-//					StimkoData.BoardCell new_hint_cell = puzzle.hint(hint_cell);
-//					if(new_hint_cell == hint_cell) {
-//						hint_level++;
-//					} else {
-//						hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn());
-//						hint_cell = new_hint_cell;
-//					}
-//					Output.printHint(hint_cell_value,hint_level);
+					//TODO joao! ver se hint_level == max_hint_level! se sim, chutar nova célula!
+					StimkoData.BoardCell new_hint_cell = puzzle.hint(hint_cell);
+					if(new_hint_cell.equals(hint_cell) ) {
+						hint_level++;
+					} else {
+						hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
+						hint_cell = new_hint_cell;
+					}
+					Output.printHint(hint_cell_value,hint_level,puzzle);
 					
 					break;
 				case 7 : 
-					Output.printCheck(smt.solveStimko(puzzle));
+					Output.printCheck(smt.solvableStimko(puzzle));
 					break;
 					
 			}

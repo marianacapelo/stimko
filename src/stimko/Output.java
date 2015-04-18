@@ -1,6 +1,9 @@
 package stimko;
 
 import java.util.ArrayList;
+import java.util.Random;
+
+import stimko.StimkoData.BoardCellValue;
 
 /*
  * To change this template, choose Tools | Templates
@@ -131,5 +134,83 @@ public class Output {
     		System.out.println("\tSomething is wrong");
     	}
     }
+
+	public static void printHint(BoardCellValue hint_cell_value, int hint_level, StimkoData puzzle) 
+	{
+		int target;
+		int disclosure_level;
+		int target_value;
+		int n = puzzle.getN();
+		if(hint_level < StimkoData.HINT_LEVEL_2) {
+			int[] targets = new int[2];
+			int[] target_values = new int[2];
+			targets[0] = StimkoData.HINT_TARGET_COLUMN;
+			target_values[0] = hint_cell_value.getColumn();
+			targets[1] = StimkoData.HINT_TARGET_ROW;
+			target_values[1] = hint_cell_value.getRow();
+			
+			
+			Random r = new Random();
+			int Low = 0;
+			int High = 1;
+			int R = r.nextInt(High-Low) + Low;
+			target = targets[R];
+			target_value = target_values[R];
+
+		} else {
+			target = StimkoData.HINT_TARGET_CELL;
+			target_value = hint_cell_value.getValue();
+		}
+		
+		if(hint_level % 2 == 0) {
+			int[] disclosure_opt = new int[2];
+			disclosure_opt[0] = StimkoData.HINT_FIRST_HEIGHT;
+			disclosure_opt[1] = StimkoData.HINT_FIRST_PARITY;
+			Random r = new Random();
+			int Low = 0;
+			int High = 1;
+			int R = r.nextInt(High-Low) + Low;
+			disclosure_level = disclosure_opt[R];
+		} else {
+			disclosure_level = StimkoData.HINT_SECOND_VALUE;
+		}
+		
+		StringBuffer out = new StringBuffer();
+		out.append("You are looking for a cell ");
+		switch(target) {
+			case StimkoData.HINT_TARGET_COLUMN: 
+				out.append(" in a column ");
+				break;
+			case StimkoData.HINT_TARGET_ROW: 
+				out.append(" in a row ");
+				break;
+			default: 
+				break;
+		}
+		
+		
+		switch(disclosure_level) {
+			case StimkoData.HINT_FIRST_HEIGHT:
+				
+				if(target_value>(n/2))
+					out.append(" of high value.");
+				else
+					out.append(" of low value.");
+
+				break;
+			case StimkoData.HINT_FIRST_PARITY:
+				if(target_value%2 == 0)
+					out.append(" of a even value.");
+				else
+					out.append(" of a odd value.");
+				
+				break;
+			case StimkoData.HINT_SECOND_VALUE:
+				out.append(" with the value "+target_value);
+				break;
+		}
+		
+		System.out.println(out.toString());
+	}
     
 }

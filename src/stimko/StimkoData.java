@@ -15,7 +15,7 @@ public class StimkoData
 //	 * @author Mariana
 //	 *
 //	 */
-	public class BoardCell 
+	public static class BoardCell 
 	{
 		private int row;
 		private int column;
@@ -48,7 +48,7 @@ public class StimkoData
 	}
 	
 	
-	public class BoardCellValue 
+	public static class BoardCellValue 
 	{
 		private int value;
 		private BoardCell cell;
@@ -86,6 +86,24 @@ public class StimkoData
 			return b.getRow()==this.getRow() && b.getColumn()==this.getColumn() && this.getValue() == b.getValue();
 		}
 	}
+	
+	
+	public static final int HINT_LEVEL_1 = 1;
+	public static final int HINT_LEVEL_2 = 2;
+	public static final int HINT_LEVEL_3 = 3;
+	public static final int HINT_LEVEL_4 = 4;
+	
+	public static final int HINT_TARGET_ROW = 10;
+	public static final int HINT_TARGET_COLUMN = 20;
+	public static final int HINT_TARGET_CELL = 30;
+	
+	public static final int HINT_FIRST_PARITY = 100;
+	public static final int HINT_FIRST_HEIGHT = 200;
+	public static final int HINT_SECOND_VALUE = 300;
+	
+	
+	
+	
 	
 	
 	/**
@@ -239,6 +257,11 @@ public class StimkoData
 		}		
 	}
 
+	public StimkoData(int n2) {
+		// TODO Auto-generated constructor stub
+		this.n = n2;
+	}
+
 	public int getN() {
 		return n;
 	}
@@ -372,8 +395,8 @@ public class StimkoData
 		this.play_history = new ArrayList<StimkoData.BoardCellValue>();
 	}
 	
-//	public BoardCell hint(BoardCell old_hint_cell) 
-//	{
+	public BoardCell hint(BoardCell old_hint_cell) 
+	{
 //		if( !old_hint_cell || old_hint_cell filled in board) {
 //			int x = random(1,2,3);
 //			return findEasiest(x);
@@ -394,5 +417,6 @@ public class StimkoData
 //			row = random das posições com zero
 //			return BoardCell(row,col);
 //		}
-//	}
+		return new BoardCell(2,2);
+	}
 }

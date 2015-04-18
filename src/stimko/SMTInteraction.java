@@ -3,6 +3,7 @@ package stimko;
 import java.util.*;
 
 import stimko.StimkoData.BoardCell;
+import stimko.StimkoData.BoardCellValue;
 
 import com.microsoft.z3.*;
 
@@ -158,18 +159,12 @@ public class SMTInteraction
 	{
 		this.current_solver = this.original_solver;
 	}
-	//TODO solveStimko returning puzzle solved and 
-	public boolean solveStimko(StimkoData puzzle) throws Z3Exception 
+	
+	public boolean solvableStimko(StimkoData puzzle) throws Z3Exception 
 	{   
 		System.out.println(this.current_solver);
         if (this.current_solver.check() == Status.SATISFIABLE)
         {
-            Model m = this.current_solver.getModel();
-            int n = puzzle.getN();
-            Expr[][] solution = new Expr[n][n];
-            for (int i = 0; i < n; i++)
-                for (int j = 0; j < n; j++)
-                    solution[i][j] = m.evaluate(this.original_positions[i][j], false);
             return true;
         } 
         return false;
@@ -297,5 +292,22 @@ public class SMTInteraction
         }
 	}
 	
+	public BoardCellValue findValue(int row, int column, StimkoData puzzle) throws Z3Exception
+	{
+		BoardCellValue c = null;
+		
+		if(row > 0 && row < puzzle.getN() && column > 0 && column < puzzle.getN()
+				&& this.current_solver.check() == Status.SATISFIABLE)
+        {
+			Model m = this.current_solver.getModel();
+	        Expr solution = m.evaluate(this.original_positions[row-1][column-1], false);
+	        System.out.println("Sudoku solution: "+solution);
+	        if(solution != null && solution.isNumeral()) {
+	        	int value =  Integer.parseInt(solution.toString());
+	        	c = new StimkoData.BoardCellValue(row, column, value);
+	        }
+        }
+		return c;
+	}
 
 }
