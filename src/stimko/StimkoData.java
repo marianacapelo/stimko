@@ -104,9 +104,7 @@ public class StimkoData
 	
 	
 	
-	
-	
-	
+
 	/**
 	 * Size of board
 	 */
@@ -123,10 +121,9 @@ public class StimkoData
 	private ArrayList<ArrayList<BoardCell>> streams;
 	
 	private ArrayList<BoardCellValue> play_history;
-	
+
 	private ArrayList<ArrayList<Integer>> original_board;
 
-	
 	public BoardCell findStartCell(HashMap<BoardCell,ArrayList<BoardCell>> viz){
 		int ns = 99999999,counter;
 		BoardCell ret = null;

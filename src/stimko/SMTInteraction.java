@@ -17,7 +17,7 @@ public class SMTInteraction
 	private Solver original_solver;
 	
 	private IntExpr[][] original_positions;
-	
+		
 	public SMTInteraction ()
 	{
         try {
@@ -123,41 +123,52 @@ public class SMTInteraction
 
         Solver s = this.ctx.mkSolver();
         s.add(stimko_c);
+        s.push();
         s.add(instance_c);
-        this.current_solver = s;
         this.original_solver = s;
-		
+        Solver ss = this.ctx.mkSolver();
+        ss.add(stimko_c);
+        ss.push();
+        ss.add(instance_c);
+        this.current_solver = ss;
 	}
 	
-	public void play(int row,int column,int value) throws Z3Exception
+	public void assertPlays(ArrayList<ArrayList<Integer>> board) throws Z3Exception
 	{    
-		IntExpr position = this.original_positions[row-1][column-1];
-		BoolExpr play_c = this.ctx.mkTrue();
-		
-		IntExpr number = this.ctx
-                .mkInt(value);
-		play_c = this.ctx.mkEq(number, position);
-		
+			
+		this.current_solver.pop();
 		this.current_solver.push();
-		this.current_solver.add(play_c);
-	
+        BoolExpr instance_c = this.ctx.mkTrue();
+
+		int n_row = 1;
+		for(ArrayList<Integer> rows : board) {
+			
+			int n_column = 1;
+			for(Integer val : rows) {
+				
+				instance_c = this.ctx.mkAnd(
+						instance_c,
+						(BoolExpr) this.ctx.mkITE(
+								this.ctx.mkEq(this.ctx.mkInt(val),
+								this.ctx.mkInt(0)), this.ctx.mkTrue(),
+								this.ctx.mkEq(this.original_positions[n_row-1][n_column-1], this.ctx.mkInt(val))));
+				n_column++;
+				
+			}
+			n_row++;	
+		}
 		
-	}
-	
-	public void undo() throws Z3Exception
-	{
-		System.out.println("before pop");
-		System.out.println(this.current_solver);
-
-		this.current_solver.pop(1);;
-		System.out.println("after pop");
-		System.out.println(this.current_solver);
-
+		this.current_solver.add(instance_c);
+		
 	}
 	
 	public void reset() throws Z3Exception
 	{
+		System.out.println(this.original_solver);
+
 		this.current_solver = this.original_solver;
+		System.out.println("After reset...");
+		System.out.println(this.current_solver);
 	}
 	
 	public boolean solvableStimko(StimkoData puzzle) throws Z3Exception 
@@ -171,6 +182,23 @@ public class SMTInteraction
 		
 	}
 	
+	public BoardCellValue findValue(int row, int column, StimkoData puzzle) throws Z3Exception
+	{
+		BoardCellValue c = null;
+		
+		if(row > 0 && row < puzzle.getN() && column > 0 && column < puzzle.getN()
+				&& this.current_solver.check() == Status.SATISFIABLE)
+        {
+			Model m = this.current_solver.getModel();
+	        Expr solution = m.evaluate(this.original_positions[row-1][column-1], false);
+	        System.out.println("Sudoku solution: "+solution);
+	        if(solution.isNumeral()) {
+	        	int value =  Integer.parseInt(solution.toString());
+	        	c = new StimkoData.BoardCellValue(row, column, value);
+	        }
+        }
+		return c;
+	}
 	
 	public void my() throws Z3Exception, Exception
 	{
@@ -291,23 +319,6 @@ public class SMTInteraction
             throw new Exception();
         }
 	}
-	
-	public BoardCellValue findValue(int row, int column, StimkoData puzzle) throws Z3Exception
-	{
-		BoardCellValue c = null;
-		
-		if(row > 0 && row < puzzle.getN() && column > 0 && column < puzzle.getN()
-				&& this.current_solver.check() == Status.SATISFIABLE)
-        {
-			Model m = this.current_solver.getModel();
-	        Expr solution = m.evaluate(this.original_positions[row-1][column-1], false);
-	        System.out.println("Sudoku solution: "+solution);
-	        if(solution.isNumeral()) {
-	        	int value =  Integer.parseInt(solution.toString());
-	        	c = new StimkoData.BoardCellValue(row, column, value);
-	        }
-        }
-		return c;
-	}
+
 
 }

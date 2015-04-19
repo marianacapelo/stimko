@@ -112,7 +112,7 @@ public class Stimko
 					if(!valid_play) {
 						Output.printInvalidPlay();
 					} else {
-						smt.play(row,column,value);
+						smt.assertPlays(puzzle.getBoard());
 						System.out.println(puzzle);
 					}
 					break;
@@ -124,7 +124,7 @@ public class Stimko
 					if(!valid_play) {
 						Output.printInvalidPlay();
 					} else {
-						smt.undo();
+						smt.assertPlays(puzzle.getBoard());
 						System.out.println(puzzle);
 					}
 					break;
