@@ -141,6 +141,13 @@ public class Output {
 		int disclosure_level;
 		int target_value;
 		int n = puzzle.getN();
+		
+		if(hint_level == StimkoData.HINT_MAX_LEVEL) {
+			System.out.println("You are looking for the cell in the row "+hint_cell_value.getRow() + 
+					" and column "+hint_cell_value.getColumn() + ", with the value "+hint_cell_value.getValue()+".");
+			return;
+		}
+		
 		if(hint_level < StimkoData.HINT_LEVEL_2) {
 			int[] targets = new int[2];
 			int[] target_values = new int[2];
@@ -179,10 +186,10 @@ public class Output {
 		out.append("You are looking for a cell ");
 		switch(target) {
 			case StimkoData.HINT_TARGET_COLUMN: 
-				out.append(" in a column ");
+				out.append("in a column ");
 				break;
 			case StimkoData.HINT_TARGET_ROW: 
-				out.append(" in a row ");
+				out.append("in a row ");
 				break;
 			default: 
 				break;
@@ -193,24 +200,30 @@ public class Output {
 			case StimkoData.HINT_FIRST_HEIGHT:
 				
 				if(target_value>(n/2))
-					out.append(" of high value.");
+					out.append("of high value.");
 				else
-					out.append(" of low value.");
+					out.append("of low value.");
 
 				break;
 			case StimkoData.HINT_FIRST_PARITY:
 				if(target_value%2 == 0)
-					out.append(" of a even value.");
+					out.append("of a even value.");
 				else
-					out.append(" of a odd value.");
+					out.append("of a odd value.");
 				
 				break;
 			case StimkoData.HINT_SECOND_VALUE:
-				out.append(" with the value "+target_value);
+				out.append("with the value "+target_value+".");
 				break;
 		}
 		
 		System.out.println(out.toString());
+	}
+	
+	public static void printInvalidHint() {
+		
+		System.out.println("No valid hint available...");
+		
 	}
     
 }

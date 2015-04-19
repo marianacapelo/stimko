@@ -302,7 +302,7 @@ public class SMTInteraction
 			Model m = this.current_solver.getModel();
 	        Expr solution = m.evaluate(this.original_positions[row-1][column-1], false);
 	        System.out.println("Sudoku solution: "+solution);
-	        if(solution != null && solution.isNumeral()) {
+	        if(solution.isNumeral()) {
 	        	int value =  Integer.parseInt(solution.toString());
 	        	c = new StimkoData.BoardCellValue(row, column, value);
 	        }

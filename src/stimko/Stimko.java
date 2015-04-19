@@ -2,6 +2,8 @@ package stimko;
 
 import java.util.*;
 
+import com.microsoft.z3.Z3Exception;
+
 import print.Printer;
 import print.Printer.Types;
 import print.color.ColoredPrinter;
@@ -142,11 +144,18 @@ public class Stimko
 					if(new_hint_cell.equals(hint_cell) ) {
 						hint_level++;
 					} else {
-						hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
-						hint_cell = new_hint_cell;
+						try {
+							hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
+							hint_cell = new_hint_cell;
+						} catch(Z3Exception e) {
+							System.out.println(e.getMessage());
+						}
 					}
-					Output.printHint(hint_cell_value,hint_level,puzzle);
-					
+					if(hint_cell_value == null) {
+						Output.printInvalidHint();
+					} else {
+						Output.printHint(hint_cell_value,hint_level,puzzle);
+					}
 					break;
 				case 7 : 
 					Output.printCheck(smt.solvableStimko(puzzle));

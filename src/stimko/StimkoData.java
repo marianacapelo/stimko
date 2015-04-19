@@ -43,7 +43,7 @@ public class StimkoData
 		}
 		
 		public boolean equals(BoardCell b){
-			return b.getRow()==this.getRow() && b.getColumn()==this.getColumn();
+			return (b == null)? false : b.getRow()==this.getRow() && b.getColumn()==this.getColumn();
 		}
 	}
 	
@@ -92,6 +92,7 @@ public class StimkoData
 	public static final int HINT_LEVEL_2 = 2;
 	public static final int HINT_LEVEL_3 = 3;
 	public static final int HINT_LEVEL_4 = 4;
+	public static final int HINT_MAX_LEVEL = 4;
 	
 	public static final int HINT_TARGET_ROW = 10;
 	public static final int HINT_TARGET_COLUMN = 20;
