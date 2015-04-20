@@ -124,6 +124,8 @@ public class StimkoData
 
 	private ArrayList<ArrayList<Integer>> original_board;
 
+	
+	
 	public BoardCell findStartCell(HashMap<BoardCell,ArrayList<BoardCell>> viz){
 		int ns = 99999999,counter;
 		BoardCell ret = null;
@@ -416,5 +418,142 @@ public class StimkoData
 //			return BoardCell(row,col);
 //		}
 		return new BoardCell(2,2);
+	}
+	
+	public void generateStep1(int n)
+	{
+		//Init properties
+		this.n = n;
+		this.play_history = new ArrayList<StimkoData.BoardCellValue>();
+		this.board = new ArrayList<ArrayList<Integer>>(n);
+		for(int i = 0 ; i < n ; i++) {
+			ArrayList<Integer> r = new ArrayList<Integer>(n);
+			for(int j = 0 ; j< n ; j++) {
+				r.add(0);
+			}
+			this.board.add(r);
+		}
+		
+		//Generate random streams
+		boolean success = false;
+
+		while(!success) {
+
+			boolean done = false;
+			boolean alive = true;
+			this.streams = new ArrayList<ArrayList<BoardCell>>();
+			
+			while(!done) {
+				
+				BoardCell target = null;
+				//Find starting cell for stream
+				while(target == null) {
+					int n_r = 0;
+					//Find cell that is not in any streams
+					for(ArrayList<Integer> r : this.board) {
+						int n_c = 0;
+						for(Integer v : r) {
+							if(findStream(n_r,n_c)==null) {
+								target = new BoardCell(n_r,n_c);
+								break;
+							}
+							n_c++;
+						}
+						if(target!= null) {
+							break;
+						}
+						n_r++;
+					}
+				}
+				
+				ArrayList<BoardCell> stream = new ArrayList<BoardCell>();
+				stream.add(target);
+				int size_stream = 1;
+				
+				// Starting of loop to construct stream
+				while( alive && (size_stream<n) ) {
+					
+					//Find one random neighbor that is not in any stream
+					
+					ArrayList<BoardCell> neighbors = new ArrayList<BoardCell>();
+					
+					
+					ArrayList<Integer> possible_n_r = new ArrayList<Integer>();
+					int col = target.getColumn();
+					int row = target.getRow();
+					if(row != 0) {
+						possible_n_r.add(row-1);					
+					}
+					if(row != n-1) {
+						possible_n_r.add(row+1);
+					}
+					possible_n_r.add(row);
+					ArrayList<Integer> possible_n_c = new ArrayList<Integer>();
+					if(col != 0) {
+						possible_n_c.add(col-1);					
+					}
+					if(col != n-1) {
+						possible_n_c.add(col+1);
+					}
+					possible_n_c.add(col);
+					
+					for(Integer possible_row : possible_n_r) {
+						for(Integer possible_col : possible_n_c) {
+							
+							//Exclude own cell
+							if(!(possible_row==row && possible_col == col)) {
+								BoardCell neighbor = new BoardCell(possible_row,possible_col);
+								//Check if neighbor in any stream
+								boolean in_current_stream = false;
+								for(int k = 0; k < size_stream ; k++) {
+									if(stream.get(k).getColumn() == possible_col && stream.get(k).getRow() == possible_row)
+										in_current_stream = true;
+								}
+								if(!in_current_stream && findStream(possible_row, possible_col) == null) {
+									neighbors.add(neighbor);
+								}
+							}
+						}
+					}
+	
+					if(neighbors.size() == 0) {
+						alive = false;
+					} else {
+					
+						Random r = new Random();
+						BoardCell random_neighbor ;
+						if(neighbors.size() > 1) {
+							int Low = 0;
+							int High = neighbors.size() - 1;
+							int random_index = r.nextInt(High-Low) + Low;
+			
+							random_neighbor = neighbors.get(random_index);
+						} else {
+							random_neighbor = neighbors.get(0);
+						}
+						stream.add(random_neighbor);
+						target = random_neighbor;
+						size_stream++;
+					}
+					
+				}
+				
+				// End of loop to construct each stream
+				
+				if(!alive) {
+					break;
+				} else {
+					this.streams.add(stream);
+					if(this.streams.size() == n) {
+						done = true;
+					}
+				}	
+				
+			}
+			
+			if(done) success = true;
+		}
+		
+		System.out.println("generated stream success");
 	}
 }

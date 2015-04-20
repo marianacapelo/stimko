@@ -319,6 +319,32 @@ public class SMTInteraction
             throw new Exception();
         }
 	}
+	
+	public StimkoData populatePuzzle(StimkoData empty)
+	{
+		//O que fazer...
+		
+		// Num novo contexto, com um novo solver:
+		
+		//Passo 1 - regras de tabuleiro: colunas e linhas
+		
+		//Passo 2 - regras de tabuleiro: streams
+		
+		
+		//Passo 3 - definir percentagem de preenchimento desejada.
+		// Enquanto não se atingir a percentagem:
+		//  - Push e Assert de um número que esteja empty com valor random.
+		//  - Satisfazivel ? 
+		// Se sim, guardar valor e continuar. 
+		// Se não, pop.
+		
+		//Passo 6 - Assign de this.solvers e por aí com os utilizados.
+		
+		//Passo 5 - Devolver o puzzle populado  
+		
+		
+		
+	}
 
 
 }

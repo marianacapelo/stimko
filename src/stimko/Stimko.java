@@ -59,6 +59,14 @@ public class Stimko
 		System.out.println("YO");
 		smt = new SMTInteraction();
 		puzzle = new StimkoData("/Users/Mariana/Documents/workspace/stimko/src/stimko/4x4Test.txt");
+		
+		
+		//DEBUG:
+		
+		puzzle.generateStep1(4);
+		puzzle = smt.populatePuzzle(puzzle);
+		
+		
 		System.out.println(puzzle);
 		
 		smt.initStimko(puzzle);
@@ -202,7 +210,8 @@ public class Stimko
 //			System.out.println("------");
 //			
 		} catch(Exception e){
-			
+			System.out.println(e.getMessage());
+			System.out.println(e.getStackTrace().toString());
 		}
 		
 	}
