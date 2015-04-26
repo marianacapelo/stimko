@@ -43,10 +43,12 @@ public class Output {
     	System.out.print("\n1\tEasy");
     	System.out.print("\n2\tMedium");
     	System.out.print("\n3\tHard\n");
+    	System.out.print("\n > ");
     }
     
     public static void printLevelSelect(int levels){
     	System.out.println("\nPlease select a level from 1 to "+levels+"\n");
+    	System.out.print("\n > ");
     }
     
     public static void printMainMenu() 
@@ -200,5 +202,17 @@ public class Output {
     	}
     	System.out.println(res);
     }
+	
+	public static void AskOutputOrFile(){
+		System.out.println("Where to send the output?");
+		System.out.println("1 - Console");
+		System.out.println("2 - File");
+		System.out.print("\n > ");
+	}
+	
+	public static void InsertFileName(){
+		System.out.print("Insert the output File name");
+		System.out.print("\n > ");
+	}
     
 }

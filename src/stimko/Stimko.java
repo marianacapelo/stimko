@@ -29,6 +29,7 @@ public class Stimko
 	public static int CMD_MMENU = 5;
 	public static int CMD_HELP = 6;
 	public static int CMD_CHECK = 7;
+	public static int CMD_SOL = 8;
 	public static int CMD_INVALID = 10000;
 	
 
@@ -122,6 +123,7 @@ public class Stimko
 		commands.put(CMD_MMENU,"main menu"); //done
 		commands.put(CMD_HELP, "help");
 		commands.put(CMD_CHECK, "check");	//done
+		commands.put(CMD_SOL, "solution")
 		//gerar
 
 
@@ -248,6 +250,38 @@ public class Stimko
 				case 7 : 
 					Output.printCheck(smt.solvableStimko(puzzle));
 					break;
+				case 8 :
+					StimkoData sd = smt.getStimkoSolution(puzzle);
+					int esc=0;
+					while(esc!=1 && esc!=2){
+						Output.AskOutputOrFile();
+						esc = Input.lerInt();
+						if(esc!=1 && esc!=2){
+							Output.printInvalidInput();
+						}
+						if(esc == 2){
+							Output.InsertFileName();
+							String auxs = Input.lerString();
+							
+							PrintWriter wr = new PrintWriter(auxs, "UTF-8");
+							for(ArrayList<Integer> board : sd.getBoard()){
+								for(Integer val : board){
+									wr.printf("%d ",val);
+								}
+								wr.printf("\n");
+							}
+							wr.close();
+						}else{
+							for(ArrayList<Integer> board : sd.getBoard()){
+								for(Integer val : board){
+									System.out.printf("%d ",val);
+								}
+								System.out.printf("\n");
+							}
+						}
+					}
+					break;
+					
 					
 			}
 			
