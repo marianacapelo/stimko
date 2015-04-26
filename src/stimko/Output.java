@@ -143,8 +143,8 @@ public class Output {
 		int n = puzzle.getN();
 		
 		if(hint_level == StimkoData.HINT_MAX_LEVEL) {
-			System.out.println("You are looking for the cell in the row "+hint_cell_value.getRow() + 
-					" and column "+hint_cell_value.getColumn() + ", with the value "+hint_cell_value.getValue()+".");
+			System.out.println("You are looking for the cell in the row "+(hint_cell_value.getRow() + 1)+
+					" and column "+(hint_cell_value.getColumn() +1)+ ", with the value "+hint_cell_value.getValue()+".");
 			return;
 		}
 		
@@ -152,15 +152,14 @@ public class Output {
 			int[] targets = new int[2];
 			int[] target_values = new int[2];
 			targets[0] = StimkoData.HINT_TARGET_COLUMN;
-			target_values[0] = hint_cell_value.getColumn();
+			target_values[0] = hint_cell_value.getColumn()+1;
 			targets[1] = StimkoData.HINT_TARGET_ROW;
-			target_values[1] = hint_cell_value.getRow();
+			target_values[1] = hint_cell_value.getRow()+1;
 			
 			
 			Random r = new Random();
-			int Low = 0;
 			int High = 1;
-			int R = r.nextInt(High-Low) + Low;
+			int R = r.nextInt(High);
 			target = targets[R];
 			target_value = target_values[R];
 

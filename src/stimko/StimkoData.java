@@ -265,9 +265,34 @@ public class StimkoData
 		}		
 	}
 
-	public StimkoData(int n2) {
-		// TODO Auto-generated constructor stub
-		this.n = n2;
+	public StimkoData(int n) {
+		this.n = n;
+		this.board = new ArrayList<ArrayList<Integer>>();
+		for(int i = 0 ; i < n ; i++) {
+			ArrayList<Integer> a_r = new ArrayList<Integer>(n);
+			for(int j = 0 ; j< n ; j++) {
+				a_r.add(0);
+			}
+			this.board.add(a_r);
+		}
+		this.original_board = new ArrayList<ArrayList<Integer>>();
+		for(int i = 0 ; i < n ; i++) {
+			ArrayList<Integer> a_r = new ArrayList<Integer>(n);
+			for(int j = 0 ; j< n ; j++) {
+				a_r.add(0);
+			}
+			this.original_board.add(a_r);
+		}
+		this.play_history = new ArrayList<StimkoData.BoardCellValue>(n);
+		this.streams = new ArrayList<ArrayList<BoardCell>>(n);
+		for(int i = 0 ; i < n ; i++) {
+			ArrayList<BoardCell> a_r = new ArrayList<BoardCell>(n);
+			for(int j = 0 ; j< n ; j++) {
+				a_r.add(new BoardCell(0,0));
+			}
+			this.streams.add(a_r);
+		}
+		
 	}
 
 	public int getN() {
@@ -285,6 +310,7 @@ public class StimkoData
 	public void setBoardValues(ArrayList<ArrayList<Integer>> board) {
 		this.board = board;
 		
+		this.original_board = new ArrayList<ArrayList<Integer>>();
 		for(int i = 0 ; i < n ; i++) {
 			ArrayList<Integer> a_r = new ArrayList<Integer>(n);
 			for(int j = 0 ; j< n ; j++) {
@@ -521,7 +547,15 @@ public class StimkoData
 	
 	public void reset() 
 	{
-		this.board = this.original_board;
+		this.board = new ArrayList<ArrayList<Integer>> ();
+		for(int i = 0 ; i < n ; i++) {
+			ArrayList<Integer> a_r = new ArrayList<Integer>(n);
+			for(int j = 0 ; j< n ; j++) {
+				a_r.add(this.original_board.get(i).get(j));
+			}
+			this.board.add(a_r);
+		}
+		
 		this.play_history = new ArrayList<StimkoData.BoardCellValue>();
 	}
 	

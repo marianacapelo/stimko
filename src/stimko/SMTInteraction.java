@@ -27,6 +27,12 @@ public class SMTInteraction
 		}
 	}
 	
+	/**
+	 * Initializer method. Receives a StimkoData puzzle which is read to the initialization of the adequate properties.
+	 * 
+	 * @param puzzle
+	 * @throws Exception
+	 */
 	public void initStimko(StimkoData puzzle) throws Exception 
 	{
 		// n x n matrix of integer variables
@@ -133,6 +139,13 @@ public class SMTInteraction
         this.current_solver = ss;
 	}
 	
+	
+	/**
+	 * Rewrites conditions in the current solver relative to the values of the board received as parameter.
+	 * 
+	 * @param board
+	 * @throws Z3Exception
+	 */
 	public void assertPlays(ArrayList<ArrayList<Integer>> board) throws Z3Exception
 	{    
 			
@@ -162,15 +175,23 @@ public class SMTInteraction
 		
 	}
 	
+	/**
+	 * Sets solver to its initial state.
+	 * 
+	 * @throws Z3Exception
+	 */
 	public void reset() throws Z3Exception
 	{
-		System.out.println(this.original_solver);
-
 		this.current_solver = this.original_solver;
-		System.out.println("After reset...");
-		System.out.println(this.current_solver);
 	}
 	
+	/**
+	 * Checks if state of current solver is satisfiable.
+	 * 
+	 * @param puzzle
+	 * @return
+	 * @throws Z3Exception
+	 */
 	public boolean solvableStimko(StimkoData puzzle) throws Z3Exception 
 	{   
 		System.out.println(this.current_solver);
@@ -182,15 +203,53 @@ public class SMTInteraction
 		
 	}
 	
-	public BoardCellValue findValue(int row, int column, StimkoData puzzle) throws Z3Exception
+	
+	public StimkoData getStimkoSolution(StimkoData puzzle) throws Z3Exception 
+	{   
+		int n = puzzle.getN();
+		StimkoData solved_puzzle = new StimkoData(n);
+		System.out.println(this.current_solver);
+		ArrayList<ArrayList<Integer>> solved_values = new ArrayList<ArrayList<Integer>>(n);
+        if (this.current_solver.check() == Status.SATISFIABLE)
+        {
+        	int r,c;
+        	Model m = this.current_solver.getModel();
+        	for(r=0 ; r<n ; r++) {
+        		ArrayList<Integer> row = new ArrayList<Integer>(n);
+        		for(c=0 ; c<n ; c++) {
+		        	Expr solution = m.evaluate(this.original_positions[r][c], false);
+			        if(solution.isNumeral()) {
+			        	int value =  Integer.parseInt(solution.toString());
+			        	row.add(value);
+			        }
+        		}
+        		solved_values.add(row);
+        	}
+        	solved_puzzle.setBoardValues(solved_values);
+        } 
+        return solved_puzzle;
+		
+	}
+	
+	/**
+	 * Finds value of the cell in the received row and column.
+	 * 
+	 * @param row
+	 * @param column
+	 * @param puzzle
+	 * @return
+	 * @throws Z3Exception
+	 */
+	public BoardCellValue findValue(BoardCell cell) throws Z3Exception
 	{
 		BoardCellValue c = null;
-		
-		if(row > 0 && row < puzzle.getN() && column > 0 && column < puzzle.getN()
-				&& this.current_solver.check() == Status.SATISFIABLE)
+		int row = cell.getRow();
+		int column = cell.getColumn();
+		System.out.println(this.current_solver);
+		if(this.current_solver.check() == Status.SATISFIABLE)
         {
 			Model m = this.current_solver.getModel();
-	        Expr solution = m.evaluate(this.original_positions[row-1][column-1], false);
+	        Expr solution = m.evaluate(this.original_positions[row][column], false);
 	        System.out.println("Sudoku solution: "+solution);
 	        if(solution.isNumeral()) {
 	        	int value =  Integer.parseInt(solution.toString());
@@ -200,128 +259,20 @@ public class SMTInteraction
 		return c;
 	}
 	
-	public void my() throws Z3Exception, Exception
-	{
-		Context ctx = this.ctx;
-		// 9x9 matrix of integer variables
-        IntExpr[][] X = new IntExpr[9][];
-        for (int i = 0; i < 9; i++)
-        {
-            X[i] = new IntExpr[9];
-            for (int j = 0; j < 9; j++)
-                X[i][j] = (IntExpr) ctx.mkConst(
-                        ctx.mkSymbol("x_" + (i + 1) + "_" + (j + 1)),
-                        ctx.getIntSort());
-        }
-
-        // each cell contains a value in {1, ..., 9}
-        BoolExpr[][] cells_c = new BoolExpr[9][];
-        for (int i = 0; i < 9; i++)
-        {
-            cells_c[i] = new BoolExpr[9];
-            for (int j = 0; j < 9; j++)
-                cells_c[i][j] = ctx.mkAnd(ctx.mkLe(ctx.mkInt(1), X[i][j]),
-                        ctx.mkLe(X[i][j], ctx.mkInt(9)));
-        }
-
-        // each row contains a digit at most once
-        BoolExpr[] rows_c = new BoolExpr[9];
-        for (int i = 0; i < 9; i++)
-            rows_c[i] = ctx.mkDistinct(X[i]);
-
-        // each column contains a digit at most once
-        BoolExpr[] cols_c = new BoolExpr[9];
-        for (int j = 0; j < 9; j++)
-            cols_c[j] = ctx.mkDistinct(X[j]);
-
-        // each 3x3 square contains a digit at most once
-        BoolExpr[][] sq_c = new BoolExpr[3][];
-        for (int i0 = 0; i0 < 3; i0++)
-        {
-            sq_c[i0] = new BoolExpr[3];
-            for (int j0 = 0; j0 < 3; j0++)
-            {
-            	//Create exp. for 9 cells 
-                IntExpr[] square = new IntExpr[9];
-                for (int i = 0; i < 3; i++)
-                    for (int j = 0; j < 3; j++)
-                        square[3 * i + j] = X[3 * i0 + i][3 * j0 + j];
-                
-                //Bool exp makes distinct values for the 9 cells created
-                sq_c[i0][j0] = ctx.mkDistinct(square);
-            }
-        }
-
-        BoolExpr sudoku_c = ctx.mkTrue();
-        for (BoolExpr[] t : cells_c)
-            sudoku_c = ctx.mkAnd(ctx.mkAnd(t), sudoku_c);
-        sudoku_c = ctx.mkAnd(ctx.mkAnd(rows_c), sudoku_c);
-        sudoku_c = ctx.mkAnd(ctx.mkAnd(cols_c), sudoku_c);
-        for (BoolExpr[] t : sq_c)
-            sudoku_c = ctx.mkAnd(ctx.mkAnd(t), sudoku_c);
-
-        // sudoku instance, we use '0' for empty cells
-        int[][] instance = { { 0, 0, 0, 0, 9, 4, 0, 3, 0 },
-                { 0, 0, 0, 5, 1, 0, 0, 0, 7 }, { 0, 8, 9, 0, 0, 0, 0, 4, 0 },
-                { 0, 0, 0, 0, 0, 0, 2, 0, 8 }, { 0, 6, 0, 2, 0, 1, 0, 5, 0 },
-                { 1, 0, 2, 0, 0, 0, 0, 0, 0 }, { 0, 7, 0, 0, 0, 0, 5, 2, 0 },
-                { 9, 0, 0, 0, 6, 5, 0, 0, 0 }, { 0, 4, 0, 9, 7, 0, 0, 0, 0 } };
-
-        BoolExpr instance_c = ctx.mkTrue();
-        for (int i = 0; i < 9; i++)
-            for (int j = 0; j < 9; j++)
-                instance_c = ctx.mkAnd(
-                        instance_c,
-                        (BoolExpr) ctx.mkITE(
-                                ctx.mkEq(ctx.mkInt(instance[i][j]),
-                                        ctx.mkInt(0)), ctx.mkTrue(),
-                                ctx.mkEq(X[i][j], ctx.mkInt(instance[i][j]))));
-
-        Solver s = ctx.mkSolver();
-        s.add(sudoku_c);
-        s.add(instance_c);
-
-        
-        System.out.println("CELSS");
-        System.out.println(cells_c.toString());
-        System.out.println("ROWS");
-        System.out.println(rows_c.toString());
-        System.out.println("COLS");
-        System.out.println(cols_c.toString());
-
-        System.out.println("SQUARE");
-        System.out.println(sq_c.toString());
-        
-        
-        System.out.println(ctx.toString());
-        System.out.println("Sudoku_c");
-        System.out.println(sudoku_c.toString());
-        System.out.println("Instance_c");
-        System.out.println(instance_c.toString());
-        
-        if (s.check() == Status.SATISFIABLE)
-        {
-            Model m = s.getModel();
-            Expr[][] R = new Expr[9][9];
-            for (int i = 0; i < 9; i++)
-                for (int j = 0; j < 9; j++)
-                    R[i][j] = m.evaluate(X[i][j], false);
-            System.out.println("Sudoku solution:");
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                    System.out.print(" " + R[i][j]);
-                System.out.println();
-            }
-        } else
-        {
-            System.out.println("Failed to solve sudoku");
-            throw new Exception();
-        }
-	}
 	
-	
-	public boolean unique_solution(Solver s, Context c, int n, ArrayList<ArrayList<Integer>> board_values, IntExpr[][] positions ) throws Z3Exception 
+	/**
+	 * Checks if solution of the puzzle is unique.
+	 * Uses current state of the received solver and adds restrictions that deny values of the board that are not original. 
+	 * 
+	 * @param s
+	 * @param c
+	 * @param n
+	 * @param board_values
+	 * @param positions
+	 * @return
+	 * @throws Z3Exception
+	 */
+	public boolean unique_solution(Solver s, Context c, int n, ArrayList<ArrayList<Integer>> original_board_values, IntExpr[][] positions ) throws Z3Exception 
 	{
 			
 		boolean single = true;
@@ -337,7 +288,7 @@ public class SMTInteraction
             for (int j = 0; j < n; j++) {
             	
             	//Only deny assignments of values that do not belong to the original board values
-            	if(board_values.get(i).get(j)!=0) {
+            	if(original_board_values.get(i).get(j)==0) {
 	            	R[i][j] = first_model.evaluate(positions[i][j], false);
 	            	int val = Integer.parseInt(R[i][j].toString());
 	            	
@@ -351,9 +302,7 @@ public class SMTInteraction
             	}
             }
 		
-		System.out.println(s.toString());
 		s.add(bool_exp);
-		System.out.println(s.toString());
 
 		if(s.check() == Status.SATISFIABLE) {
 			single = false;
@@ -362,18 +311,33 @@ public class SMTInteraction
 		s.pop();
 		
 		return single;
-		
 	}
 
 
+	/**
+	 * Generates new puzzle.
+	 * Receives a empty puzzle, from which only its size is read.
+	 * Generates static restrictions about columns and rows of the puzzle.
+	 * Generates dynamic restrictions about the streams that are being generated, using the generateNewStream method.
+	 * The streams are set in the puzzle received using setStreams method of StimkoData class.
+	 * Generates dynamic values according to the wanted percentage received as parameter. 
+	 * Sets class properties to the ones used in the method, and uses setBoardValues method of StimkoData class to set the 
+	 * values generated.
+	 * 
+	 * @param empty StimkoData board with only its size set
+	 * @return empty StimkoData board modified
+	 * @throws Z3Exception
+	 */
 	public StimkoData generate(StimkoData empty) throws Z3Exception
 	{
 			
 		boolean success = false;
 		Context new_ctx = null;
 		Solver new_solver= null;
+        ArrayList<ArrayList<BoardCell>> streams = null;
 		IntExpr[][] new_original_positions= null;
 		ArrayList<ArrayList<Integer>> new_board_values= null;
+		int n  = empty.getN();
 
 		while(!success) {
 			//O que fazer...
@@ -382,7 +346,6 @@ public class SMTInteraction
 			
 			// Num novo contexto, com um novo solver, preparar expressões para as posições novas.
 			
-			int n  = empty.getN();
 			
 			new_original_positions = new IntExpr[n][];
 	        for (int i = 0; i < n; i++)
@@ -442,7 +405,6 @@ public class SMTInteraction
 
 	        // each stream contains a digit at most once
 	        BoolExpr[] streams_c = new BoolExpr[1];
-	        ArrayList<ArrayList<BoardCell>> streams;
 	        boolean done = false;
 	        int n_streams;
 	        while (!done)
@@ -567,17 +529,8 @@ public class SMTInteraction
 	        	
 	        	new_solver.add(play_c);
 	        	
-				//  - SATISFIABLE ? 
-	    		if (new_solver.check() == Status.SATISFIABLE) {
-	    			// Se sim, guardar valor e continuar. 
-	    			(new_board_values.get(row)).set(column, value);
-	    			n_current_cells ++;
-	                System.out.println("Generated a value.");
-	            } else {
-	            	// Se não, pop.
-	            	new_solver.pop();
-	            	System.out.println("Undone a value");
-	            }
+    			(new_board_values.get(row)).set(column, value);
+    			n_current_cells ++;
 		        	
 	        }
 	       
@@ -595,11 +548,26 @@ public class SMTInteraction
 	    
 		//Passo 5 - Devolver o puzzle populado  
 		empty.setBoardValues(new_board_values);
+		empty.organizeStream(n,streams);
 		return empty;
-		
 		
 	}
 	
+	/**
+	 * Generates new stream of the puzzle received.
+	 * Fetches empty cell in the puzzle to start the stream being constructed, and uses one of its neighbors to continue it.
+	 * The method considers the array of bad streams received when the stream is about to be terminated. If a match is found between the current
+	 * stream and the bad streams received, then the neighbors of the cell in the bad streams are removed from the current neighbors 
+	 * being consider to be part of the stream. If this operation removes all neighbors of the cell, then the cell is removed form the current stream
+	 * and another neighbor of the previous cell in stream is considered. If none is found, the stream continues to remove cells till it is emptied.
+	 * In this case, the first cell considered is put in the tried_targets array and another first cell is searched. If no cell is found, the method returns null. 
+	 * 
+	 * 
+	 * @param puzzle
+	 * @param n_stream
+	 * @param bad_streams
+	 * @return
+	 */
 	public ArrayList<BoardCell> generateNewStream(StimkoData puzzle, int n_stream, ArrayList<ArrayList<BoardCell>> bad_streams)
 	{
 		

@@ -155,7 +155,7 @@ public class Stimko
 							hint_level++;
 						} else {
 							try {
-								hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
+								hint_cell_value = smt.findValue(new_hint_cell);
 								hint_cell = new_hint_cell;
 							} catch(Z3Exception e) {
 								System.out.println(e.getMessage());
