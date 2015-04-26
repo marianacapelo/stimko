@@ -1,9 +1,15 @@
 package stimko;
 
 import java.util.*;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.StringBuilder;
 
 import com.microsoft.z3.Z3Exception;
+
+
+
+
 
 //import print.Printer;
 //import print.Printer.Types;
@@ -17,7 +23,7 @@ public class Stimko
 {
 	
 	private static StimkoData puzzle ;
-	private static SMTInteraction smt ;
+//	private static SMTInteraction smt ;
 	
 	public static int MAX_LEVELS = 4;
 	public static String DIRECTORY_NAME = "/home/mjf/workspace/Stimko/src/stimko/";
@@ -132,9 +138,9 @@ public class Stimko
 			
 		
 		puzzle = MainMenu();
-		if(puzzle == null){return;}
+		if(puzzle == null){System.out.println("Exiting");return;}
 		Output.drawPuzzle(puzzle);
-		smt.initStimko(puzzle);
+//		smt.initStimko(puzzle);
 		//Output.printPuzzle(puzzle);
 		// Print nao funciona ... 
 
@@ -183,7 +189,7 @@ public class Stimko
 					if(!valid_play) {
 						Output.printInvalidPlay();
 					} else {
-						smt.play(row,column,value);
+//						smt.play(row,column,value);
 						System.out.println(puzzle);
 					}
 					break;
@@ -195,7 +201,7 @@ public class Stimko
 					if(!valid_play) {
 						Output.printInvalidPlay();
 					} else {
-						smt.undo();
+//						smt.undo();
 						System.out.println(puzzle);
 					}
 					break;
@@ -203,7 +209,7 @@ public class Stimko
 				case 3 :
 					
 					puzzle.reset();
-					smt.reset();
+//					smt.reset();
 					
 					System.out.println(puzzle);
 					break;
@@ -217,22 +223,22 @@ public class Stimko
 						if(hint_level>StimkoData.HINT_MAX_LEVEL){
 							hint_cell = null;
 							new_hint_cell = puzzle.hint(hint_cell);
-							try {
-								hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
+//							try {
+//								hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
 								hint_cell = new_hint_cell;
 								hint_level = 1;
-							} catch(Z3Exception e) {
-								System.out.println(e.getMessage());
-							}
+//							} catch(Z3Exception e) {
+//								System.out.println(e.getMessage());
+//							}
 						}
 					} else {
-						try {
-							hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
+//						try {
+//							hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
 							hint_cell = new_hint_cell;
 							hint_level = 1;
-						} catch(Z3Exception e) {
-							System.out.println(e.getMessage());
-						}
+//						} catch(Z3Exception e) {
+//							System.out.println(e.getMessage());
+//						}
 					}
 					if(hint_cell_value == null) {
 						Output.printInvalidHint();
@@ -244,13 +250,13 @@ public class Stimko
 					puzzle = MainMenu();
 					if(puzzle == null){return;}
 					Output.drawPuzzle(puzzle);
-					smt.initStimko(puzzle);
+//					smt.initStimko(puzzle);
 					break;
 				case 6:
 					Output.printPlayOptions();
 					break;
 				case 7 : 
-					Output.printCheck(smt.solvableStimko(puzzle));
+//					Output.printCheck(smt.solvableStimko(puzzle));
 					break;
 					
 			}
@@ -272,7 +278,11 @@ public class Stimko
 		}
 	
 		} catch(Exception e){
-			
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			sw.toString();
+			System.out.println(sw);
 		}
 		
 	}

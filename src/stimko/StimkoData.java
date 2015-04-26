@@ -47,6 +47,24 @@ public class StimkoData
 		}
 	}
 	
+	public static class StreamPair
+	{
+		private BoardCell cell1;
+		private BoardCell cell2;
+		
+		public StreamPair(BoardCell c1, BoardCell c2){
+			cell1 = new BoardCell(c1.getRow(),c1.getColumn());
+			cell2 = new BoardCell(c2.getRow(),c2.getColumn());
+		}
+		
+		public BoardCell getCell1(){
+			return this.cell1;
+		}
+		public BoardCell getCell2(){
+			return this.cell2;
+		}
+	}
+	
 	
 	public static class BoardCellValue 
 	{
@@ -122,6 +140,8 @@ public class StimkoData
 	 */
 	private ArrayList<ArrayList<BoardCell>> streams;
 	
+	private ArrayList<ArrayList<StreamPair>> streamPairs;
+	
 	private ArrayList<BoardCellValue> play_history;
 	
 	private ArrayList<ArrayList<Integer>> original_board;
@@ -145,14 +165,15 @@ public class StimkoData
 		return ret;
 	}
 	
-	public ArrayList<ArrayList<BoardCell>> organizeStream(int n, ArrayList<ArrayList<BoardCell>> st){
-		ArrayList<ArrayList<BoardCell>> ret = new ArrayList<ArrayList<BoardCell>>(n);
+	public ArrayList<ArrayList<StreamPair>> organizeStream(int n, ArrayList<ArrayList<BoardCell>> st){
+		ArrayList<ArrayList<StreamPair>> ret = new ArrayList<ArrayList<StreamPair>>(n);
 		int Scounter;
 		//Organiza por Streams
 		for(ArrayList<BoardCell> aux : st){
+			ArrayList<StreamPair> finalS = null;
 			Scounter = 0;
 			HashMap<BoardCell,ArrayList<BoardCell>> viz = new HashMap<BoardCell,ArrayList<BoardCell>>(n);
-			ArrayList<BoardCell> finalS = new ArrayList<BoardCell>();
+			finalS = new ArrayList<StreamPair>();
 			for(BoardCell auxB : aux){
 				ArrayList<BoardCell> auxv = new ArrayList<BoardCell>();
 				for(BoardCell auxC : aux){
@@ -163,19 +184,76 @@ public class StimkoData
 				}
 				viz.put(auxB, auxv);
 			}
+			
+			HashMap<BoardCell, ArrayList<BoardCell>> vizAux = new HashMap<BoardCell,ArrayList<BoardCell>>();
+			for(BoardCell auxB : aux){
+				ArrayList<BoardCell> auxv = new ArrayList<BoardCell>();
+				for(BoardCell auxC : aux){
+					if(auxB.getColumn() == auxC.getColumn() && auxB.getRow() == auxC.getRow()){continue;}
+					if((Math.abs(auxB.getColumn()-auxC.getColumn())) <= 1 && (Math.abs(auxB.getRow()-auxC.getRow())) <= 1){
+						auxv.add(auxC);
+					}
+				}
+				vizAux.put(auxB, auxv);
+			}
+			
 			BoardCell start = findStartCell(viz);
+			ArrayList<BoardCell> vizitados = new ArrayList<BoardCell>();
+			vizitados.add(start);
+//				BoardCell realStart = new BoardCell(start.getRow(),start.getColumn());
 			Scounter++;
 			while(Scounter < n){
 				ArrayList<BoardCell> auxv = viz.get(start);
-				BoardCell pair = auxv.get(0);
-				finalS.add(start);
-				Scounter++;
-				for(ArrayList<BoardCell> auxB : viz.values()){
-					auxB.remove(start);
+				if(auxv.size()==0){
+					ArrayList<BoardCell> outsiders = new ArrayList<BoardCell>();
+					for(BoardCell auxCell : aux){
+						boolean isViz = false;
+						for(BoardCell vizCell : vizitados){
+							if(vizCell.getColumn()==auxCell.getColumn() && vizCell.getRow()==auxCell.getRow()){
+								isViz = true;
+							}
+						}
+						if(!isViz){
+							outsiders.add(auxCell);
+						}
+					}
+					boolean hasConnection = false;
+					for(BoardCell out : outsiders){
+						ArrayList<BoardCell> auxO = vizAux.get(out);
+						for(BoardCell vizs : auxO){
+							for(BoardCell vizCell : vizitados){
+								if(vizs.getColumn()==vizCell.getColumn() && vizs.getRow()==vizCell.getRow()){
+									hasConnection = true;
+									StreamPair auxPair = new StreamPair(vizCell, out);
+									finalS.add(auxPair);
+									vizitados.add(out);
+									Scounter++;
+									start = out;
+									break;
+								}
+								if(hasConnection){break;}
+							}
+							if(hasConnection){break;}
+						}
+						if(hasConnection){break;}
+					}
+				}else{
+					Random r = new Random();
+					int indice=0;
+					if(auxv.size()>1){
+						indice = r.nextInt(auxv.size());
+					}
+					BoardCell pair = auxv.get(indice);
+					StreamPair auxiliarPair = new StreamPair(start, pair);
+					vizitados.add(pair);
+					finalS.add(auxiliarPair);
+					Scounter++;
+					for(ArrayList<BoardCell> auxB : viz.values()){
+						auxB.remove(start);
+					}
+					start = pair;	
 				}
-				start = pair;
-			}
-			finalS.add(start);
+			}				
 			ret.add(finalS);
 		}
 		
@@ -191,12 +269,13 @@ public class StimkoData
 			reader = new BufferedReader(new FileReader(filename));
 			
 			CurrentLine = reader.readLine();
-			if(CurrentLine == null){System.out.println("Documento de input inv�lido"); return;}
+			if(CurrentLine == null){System.out.println("Invalid input file"); return;}
 			N = Integer.parseInt(CurrentLine);
-			//System.out.println("Tamanho de tabuleiro: "+N+"\n");
+			System.out.println("Tamanho de tabuleiro: "+N);
 			
 			ArrayList<ArrayList<Integer>> tab = new ArrayList<ArrayList<Integer>>(N);
 			ArrayList<ArrayList<BoardCell>> stream = new ArrayList<ArrayList<BoardCell>>(N);
+			ArrayList<ArrayList<StreamPair>> strPairs = new ArrayList<ArrayList<StreamPair>>(N);
 			
 			
 			while((CurrentLine = reader.readLine()) != null && Rcounter < N){
@@ -212,6 +291,7 @@ public class StimkoData
 				Rcounter++;
 				tab.add(aux);
 			}
+			System.out.println("Tabuleiro lido");
 			for(Ccounter=0; Ccounter < N; Ccounter++){
 				ArrayList<BoardCell> aux = new ArrayList<BoardCell>(N);
 				stream.add(aux);
@@ -232,9 +312,10 @@ public class StimkoData
 				Rcounter++;
 				if((CurrentLine = reader.readLine()) == null){break;}
 			}
+			System.out.println("Streams lidas");
 			
-			stream = organizeStream(N, stream);
-	
+			strPairs = organizeStream(N, stream);
+			System.out.println("organize");
 			ArrayList<ArrayList<Integer>> tab_clone = new ArrayList<ArrayList<Integer>>(N);
 			for(ArrayList<Integer> rows : tab) {
 				ArrayList<Integer> rows_clone = new ArrayList<Integer>();
@@ -242,6 +323,9 @@ public class StimkoData
 					rows_clone.add(vals);
 				tab_clone.add(rows_clone);	
 			}
+			
+			System.out.println("Streams ordenadas");
+			this.streamPairs = strPairs;
 			this.n = N;
 			this.board = tab;
 			this.original_board = tab_clone;
@@ -260,6 +344,10 @@ public class StimkoData
 
 	public StimkoData(int n2) {
 		this.n = n2;
+	}
+	
+	public ArrayList<ArrayList<StreamPair>> getStreamPairs(){
+		return this.streamPairs;
 	}
 
 	public int getN() {
@@ -540,95 +628,78 @@ public class StimkoData
 	}
 
 	public String checkSideConn(int row, int col){
-		int inds = -1, indb = -1;
-		for(ArrayList<BoardCell> stream : this.streams){
-			for(BoardCell bc : stream){
-				if(bc.getRow()==row && bc.getColumn()==col){
-					indb = stream.indexOf(bc);
-					inds = streams.indexOf(stream);
+		boolean connection = false;
+		for(ArrayList<StreamPair> str : this.streamPairs){
+			for(StreamPair par : str){
+				BoardCell c1 = par.getCell1();
+				BoardCell c2 = par.getCell2();
+				if(c1.getColumn()==col && c1.getRow()==row && c2.getRow()==row && c2.getColumn()==col+1){
+					connection = true;
 				}
+				if(c2.getColumn()==col && c2.getRow()==row && c1.getRow()==row && c1.getColumn()==col+1){
+					connection = true;
+				}
+				if(connection){break;}
 			}
+			if(connection){break;}
 		}
-		ArrayList<BoardCell> auxs = streams.get(inds);
-		if(indb != -1){
-			if(indb!=0){
-				BoardCell aux2 = auxs.get(indb-1);
-				if(aux2.getColumn()==col+1 && aux2.getRow()==row) return "-";
-			}
-			if(indb!=n-1){
-				BoardCell aux2 = auxs.get(indb+1);
-				if(aux2.getColumn()==col+1 && aux2.getRow()==row) return "-";
-			}	
+		if(connection){
+			return "-";
 		}
 		return " ";
 	}
 	
 	public String checkVertConn(int row, int col){
-		int inds = -1, indb = -1;
-		for(ArrayList<BoardCell> stream : this.streams){
-			for(BoardCell bc : stream){
-				if(bc.getRow()==row && bc.getColumn()==col){
-					indb = stream.indexOf(bc);
-					inds = streams.indexOf(stream);
+		boolean connection = false;
+		for(ArrayList<StreamPair> str : this.streamPairs){
+			for(StreamPair par : str){
+				BoardCell c1 = par.getCell1();
+				BoardCell c2 = par.getCell2();
+				if(c1.getColumn()==col && c1.getRow()==row && c2.getRow()==row+1 && c2.getColumn()==col){
+					connection = true;
 				}
+				if(c2.getColumn()==col && c2.getRow()==row && c1.getRow()==row+1 && c1.getColumn()==col){
+					connection = true;
+				}
+				if(connection){break;}
 			}
+			if(connection){break;}
 		}
-		ArrayList<BoardCell> auxs = streams.get(inds);
-		if(indb != -1){
-			if(indb!=0){
-				BoardCell aux2 = auxs.get(indb-1);
-				if(aux2.getColumn()==col && aux2.getRow()==row+1) return "|";
-			}
-			if(indb!=n-1){
-				BoardCell aux2 = auxs.get(indb+1);
-				if(aux2.getColumn()==col && aux2.getRow()==row+1) return "|";
-			}	
+		if(connection){
+			return "|";
 		}
 		return " ";
 	}
 	
 	public String check4WayConn(int row, int col){
 		boolean con1 = false, con2 = false;
-		int inds = -1, indb = -1;
-		for(ArrayList<BoardCell> stream : this.streams){
-			for(BoardCell bc : stream){
-				if(bc.getRow()==row && bc.getColumn()==col){
-					indb = stream.indexOf(bc);
-					inds = streams.indexOf(stream);
+		for(ArrayList<StreamPair> str : this.streamPairs){
+			for(StreamPair par : str){
+				BoardCell c1 = par.getCell1();
+				BoardCell c2 = par.getCell2();
+				if(c1.getColumn()==col && c1.getRow()==row && c2.getRow()==row+1 && c2.getColumn()==col+1){
+					con1 = true;
 				}
-			}
-		}
-		ArrayList<BoardCell> auxs = streams.get(inds);
-		if(indb != -1){
-			if(indb!=0){
-				BoardCell aux2 = auxs.get(indb-1);
-				if(aux2.getColumn()==col+1 && aux2.getRow()==row+1) con1 = true;
-			}
-			if(indb!=n-1){
-				BoardCell aux2 = auxs.get(indb+1);
-				if(aux2.getColumn()==col+1 && aux2.getRow()==row+1) con1 = true;
-			}	
-		}
-		inds = -1; indb = -1;
-		row++;
-		for(ArrayList<BoardCell> stream : this.streams){
-			for(BoardCell bc : stream){
-				if(bc.getRow()==row && bc.getColumn()==col){
-					indb = stream.indexOf(bc);
-					inds = streams.indexOf(stream);
+				if(c2.getColumn()==col && c2.getRow()==row && c1.getRow()==row+1 && c1.getColumn()==col+1){
+					con1 = true;
 				}
+				if(con1){break;}
 			}
+			if(con1){break;}
 		}
-		ArrayList<BoardCell> auxs2 = streams.get(inds);
-		if(indb != -1){
-			if(indb!=0){
-				BoardCell aux2 = auxs2.get(indb-1);
-				if(aux2.getColumn()==col+1 && aux2.getRow()==row-1) con2 = true;
+		for(ArrayList<StreamPair> str : this.streamPairs){
+			for(StreamPair par : str){
+				BoardCell c1 = par.getCell1();
+				BoardCell c2 = par.getCell2();
+				if(c1.getColumn()==col+1 && c1.getRow()==row && c2.getRow()==row+1 && c2.getColumn()==col){
+					con2 = true;
+				}
+				if(c2.getColumn()==col+1 && c2.getRow()==row && c1.getRow()==row+1 && c1.getColumn()==col){
+					con2 = true;
+				}
+				if(con2){break;}
 			}
-			if(indb!=n-1){
-				BoardCell aux2 = auxs2.get(indb+1);
-				if(aux2.getColumn()==col+1 && aux2.getRow()==row-1) con2 = true;
-			}	
+			if(con2){break;}
 		}
 		
 		if(con1){
