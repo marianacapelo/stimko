@@ -45,6 +45,7 @@ public class StimkoData
 		public boolean equals(BoardCell b){
 			return (b == null)? false : b.getRow()==this.getRow() && b.getColumn()==this.getColumn();
 		}
+
 	}
 	
 	public static class StreamPair
@@ -63,6 +64,7 @@ public class StimkoData
 		public BoardCell getCell2(){
 			return this.cell2;
 		}
+
 	}
 	
 	
@@ -121,10 +123,7 @@ public class StimkoData
 	public static final int HINT_SECOND_VALUE = 300;
 	
 	
-	
-	
-	
-	
+
 	/**
 	 * Size of board
 	 */
@@ -142,10 +141,19 @@ public class StimkoData
 	
 	private ArrayList<ArrayList<StreamPair>> streamPairs;
 	
+	public ArrayList<ArrayList<BoardCell>> getStreams() {
+		return streams;
+	}
+
+	public void setStreams(ArrayList<ArrayList<BoardCell>> streams) {
+		this.streams = streams;
+	}
+
 	private ArrayList<BoardCellValue> play_history;
-	
+
 	private ArrayList<ArrayList<Integer>> original_board;
 
+	
 	
 	public BoardCell findStartCell(HashMap<BoardCell,ArrayList<BoardCell>> viz){
 		int ns = 99999999,counter;
@@ -256,9 +264,10 @@ public class StimkoData
 			}				
 			ret.add(finalS);
 		}
-		
 		return ret;
 	}
+	
+	
 	
 	public StimkoData (String filename) 
 	{
@@ -362,8 +371,18 @@ public class StimkoData
 		return board;
 	}
 
-	public void setBoard(ArrayList<ArrayList<Integer>> board) {
+
+	public void setBoardValues(ArrayList<ArrayList<Integer>> board) {
 		this.board = board;
+		
+		this.original_board = new ArrayList<ArrayList<Integer>>();
+		for(int i = 0 ; i < n ; i++) {
+			ArrayList<Integer> a_r = new ArrayList<Integer>(n);
+			for(int j = 0 ; j< n ; j++) {
+				a_r.add(board.get(i).get(j));
+			}
+			this.original_board.add(a_r);
+		}
 	}
 
 	public ArrayList<BoardCell> getStream(int n) {
@@ -383,6 +402,117 @@ public class StimkoData
 			}
 			if(result!= null) break;
 		}
+		return result;
+		
+	}
+	public boolean hasDirectlyDependentNeighbour(int row, int col, ArrayList<BoardCell> forming_stream) {
+		
+		boolean result = false;
+					
+		//Check if some of its neighbors only has one neighbor and is going to be block if the cell is token
+		ArrayList<BoardCell> neighbors = new ArrayList<BoardCell>();
+		
+		//Step 1 - find direct neighbors
+		ArrayList<Integer> possible_n_r = new ArrayList<Integer>();
+		if(row != 0) {
+			possible_n_r.add(row-1);					
+		}
+		if(row != n-1) {
+			possible_n_r.add(row+1);
+		}
+		possible_n_r.add(row);
+		ArrayList<Integer> possible_n_c = new ArrayList<Integer>();
+		if(col != 0) {
+			possible_n_c.add(col-1);					
+		}
+		if(col != n-1) {
+			possible_n_c.add(col+1);
+		}
+		possible_n_c.add(col);
+		
+		for(Integer possible_row : possible_n_r) {
+			for(Integer possible_col : possible_n_c) {
+				
+				//Exclude own cell
+				if(!(possible_row==row && possible_col == col)) {
+					BoardCell neighbor = new BoardCell(possible_row,possible_col);
+					boolean free = true;
+					
+					//Check if neighbor in forming stream
+					for(BoardCell ins : forming_stream) {
+						if(ins.getColumn() == possible_col && ins.getRow() == possible_row) {
+							free = false;
+						}
+					}
+					//Check if neighbor in formed stream
+					if(this.findStream(possible_row, possible_col) != null) {
+						free = false;
+					}
+					
+					if(free) neighbors.add(neighbor);
+					
+				}
+			}
+		}
+		
+		// Check with each neighbor if it has only this cell as neighbor
+		for(BoardCell neighbor : neighbors) {
+			//Step 2 - find neighbors of its neighbors
+			int neighbor_row = neighbor.getRow();
+			int neighbor_col = neighbor.getColumn();
+			//Check if some of its neighbors only has one neighbor and is going to be block if the cell is token
+			ArrayList<BoardCell> second_neighbors = new ArrayList<BoardCell>();
+			
+			//Step 1 - find direct neighbors
+			ArrayList<Integer> neighbor_possible_n_r = new ArrayList<Integer>();
+			if(neighbor_row != 0) {
+				neighbor_possible_n_r.add(neighbor_row-1);					
+			}
+			if(neighbor_row != n-1) {
+				neighbor_possible_n_r.add(neighbor_row+1);
+			}
+			neighbor_possible_n_r.add(neighbor_row);
+			ArrayList<Integer> neighbor_possible_n_c = new ArrayList<Integer>();
+			if(neighbor_col != 0) {
+				neighbor_possible_n_c.add(neighbor_col-1);					
+			}
+			if(neighbor_col != n-1) {
+				neighbor_possible_n_c.add(neighbor_col+1);
+			}
+			neighbor_possible_n_c.add(neighbor_col);
+			
+			for(Integer neighbor_possible_row : neighbor_possible_n_r) {
+				for(Integer neighbor_possible_col : neighbor_possible_n_c) {
+					
+					//Exclude own cell
+					if(!(neighbor_possible_row==neighbor_row && neighbor_possible_col == neighbor_col)) {
+						BoardCell neighbor_neighbor = new BoardCell(neighbor_possible_row,neighbor_possible_col);
+						
+						boolean free = true;
+						
+						//Check if neighbor in forming stream
+						for(BoardCell ins : forming_stream) {
+							if(ins.getColumn() == neighbor_possible_col && ins.getRow() == neighbor_possible_row) {
+								free = false;
+							}
+						}
+						//Check if neighbor in formed stream
+						if(this.findStream(neighbor_possible_row, neighbor_possible_col) != null) {
+							free = false;
+						}
+						
+						if(free) second_neighbors.add(neighbor_neighbor);
+					}
+				}
+			}
+			
+			if(second_neighbors.size() == 1 && second_neighbors.get(0).getRow() == row && second_neighbors.get(0).getColumn() == col) {
+				result = true;
+				break;
+			}
+			
+		}
+
 		return result;
 		
 	}
@@ -479,7 +609,15 @@ public class StimkoData
 	
 	public void reset() 
 	{
-		this.board = this.original_board;
+		this.board = new ArrayList<ArrayList<Integer>> ();
+		for(int i = 0 ; i < n ; i++) {
+			ArrayList<Integer> a_r = new ArrayList<Integer>(n);
+			for(int j = 0 ; j< n ; j++) {
+				a_r.add(this.original_board.get(i).get(j));
+			}
+			this.board.add(a_r);
+		}
+		
 		this.play_history = new ArrayList<StimkoData.BoardCellValue>();
 	}
 	
@@ -713,5 +851,32 @@ public class StimkoData
 		}
 		else return " ";
 	}
+
+	
+	public void emptyPuzzle(int n) 
+	{
+		//Init properties
+		this.n = n;
+		this.play_history = new ArrayList<StimkoData.BoardCellValue>();
+		this.board = new ArrayList<ArrayList<Integer>>(n);
+		for(int i = 0 ; i < n ; i++) {
+			ArrayList<Integer> a_r = new ArrayList<Integer>(n);
+			for(int j = 0 ; j< n ; j++) {
+				a_r.add(0);
+			}
+			this.board.add(a_r);
+		}
+		this.original_board = new ArrayList<ArrayList<Integer>>(n);
+		for(int i = 0 ; i < n ; i++) {
+			ArrayList<Integer> a_r = new ArrayList<Integer>(n);
+			for(int j = 0 ; j< n ; j++) {
+				a_r.add(0);
+			}
+			this.original_board.add(a_r);
+		}
+		this.streams = new ArrayList<ArrayList<BoardCell>>();
+
+	}
+	
 	
 }

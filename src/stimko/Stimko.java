@@ -7,26 +7,18 @@ import java.lang.StringBuilder;
 
 import com.microsoft.z3.Z3Exception;
 
-
-
-
-
-//import print.Printer;
-//import print.Printer.Types;
-//import print.color.ColoredPrinter;
-//import print.color.Ansi.*;
-//import print.exception.InvalidArgumentsException;
 import stimko.StimkoData.BoardCell;
 
 
 public class Stimko 
 {
 	
-	private static StimkoData puzzle ;
-//	private static SMTInteraction smt ;
+	private static StimkoData puzzle;
 	
 	public static int MAX_LEVELS = 4;
 	public static String DIRECTORY_NAME = "/home/mjf/workspace/Stimko/src/stimko/";
+
+	private static SMTInteraction smt ;
 	
 	public static HashMap<Integer,String> commands;
 	public static int CMD_EXIT = 0;
@@ -39,6 +31,7 @@ public class Stimko
 	public static int CMD_CHECK = 7;
 	public static int CMD_INVALID = 10000;
 	
+
 	public static StimkoData MainMenu(){
 		int esc = -1;
 		StimkoData res = new StimkoData(-1);
@@ -113,8 +106,6 @@ public class Stimko
 		return null;
 	}
 	
-	
-	
 	/**
 	 * Comment HELLO COMMIT from PlayInteraction branch!
 	 */
@@ -132,10 +123,10 @@ public class Stimko
 		commands.put(CMD_HELP, "help");
 		commands.put(CMD_CHECK, "check");	//done
 		//gerar
+
+
 		
-		
-		try {
-			
+		try {			
 		
 		puzzle = MainMenu();
 		if(puzzle == null){System.out.println("Exiting");return;}
@@ -183,13 +174,13 @@ public class Stimko
 					int column = Integer.parseInt(inputs[1]);
 					int value = Integer.parseInt(inputs[2]);
 					
-//					System.out.println(" playing "+row+" "+column + " "+ value);
+					System.out.println(" playing "+row+" "+column + " "+ value);
 					valid_play = puzzle.play(row, column, value);
-//					System.out.println(valid_play);
+					System.out.println(valid_play);
 					if(!valid_play) {
 						Output.printInvalidPlay();
 					} else {
-//						smt.play(row,column,value);
+						smt.play(row,column,value);
 						System.out.println(puzzle);
 					}
 					break;
@@ -201,7 +192,7 @@ public class Stimko
 					if(!valid_play) {
 						Output.printInvalidPlay();
 					} else {
-//						smt.undo();
+						smt.undo();
 						System.out.println(puzzle);
 					}
 					break;
@@ -209,35 +200,34 @@ public class Stimko
 				case 3 :
 					
 					puzzle.reset();
-//					smt.reset();
+					smt.reset();
 					
 					System.out.println(puzzle);
 					break;
 					
 				case 4 :
 					
-					//TODO joao! ver se hint_level == max_hint_level! se sim, chutar nova célula!
 					StimkoData.BoardCell new_hint_cell = puzzle.hint(hint_cell);
 					if(new_hint_cell.equals(hint_cell) ) {
 						hint_level++;
 						if(hint_level>StimkoData.HINT_MAX_LEVEL){
 							hint_cell = null;
 							new_hint_cell = puzzle.hint(hint_cell);
-//							try {
-//								hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
+							try {
+								hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
 								hint_cell = new_hint_cell;
 								hint_level = 1;
-//							} catch(Z3Exception e) {
-//								System.out.println(e.getMessage());
-//							}
+							} catch(Z3Exception e) {
+								System.out.println(e.getMessage());
+							}
 						}
 					} else {
-//						try {
-//							hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
+						try {
+							hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
 							hint_cell = new_hint_cell;
 							hint_level = 1;
-//						} catch(Z3Exception e) {
-//							System.out.println(e.getMessage());
+						} catch(Z3Exception e) {
+							System.out.println(e.getMessage());
 //						}
 					}
 					if(hint_cell_value == null) {
@@ -250,20 +240,18 @@ public class Stimko
 					puzzle = MainMenu();
 					if(puzzle == null){return;}
 					Output.drawPuzzle(puzzle);
-//					smt.initStimko(puzzle);
+					smt.initStimko(puzzle);
 					break;
 				case 6:
 					Output.printPlayOptions();
 					break;
 				case 7 : 
-//					Output.printCheck(smt.solvableStimko(puzzle));
+					Output.printCheck(smt.solvableStimko(puzzle));
 					break;
 					
 			}
 			
-			System.out.println("Write command!");
-			complete_command = Input.lerString();
-			cmd = CMD_INVALID;
+			
 			for(Integer key : commands.keySet()) {
 				
 				String command = commands.get(key);
@@ -274,15 +262,19 @@ public class Stimko
 				}
 				
 			}
-		
 		}
 	
 		} catch(Exception e){
+			System.out.println("exception!");
+			System.out.println(e.getMessage());
+			System.out.println(e.getStackTrace().toString());
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
-			sw.toString();
+			sw.toString(); 
 			System.out.println(sw);
+			System.out.println(" --- exception! --- ");
+
 		}
 		
 	}
