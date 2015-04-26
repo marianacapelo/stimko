@@ -214,6 +214,17 @@ public class Stimko
 					StimkoData.BoardCell new_hint_cell = puzzle.hint(hint_cell);
 					if(new_hint_cell.equals(hint_cell) ) {
 						hint_level++;
+						if(hint_level>StimkoData.HINT_MAX_LEVEL){
+							hint_cell = null;
+							new_hint_cell = puzzle.hint(hint_cell);
+							try {
+								hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
+								hint_cell = new_hint_cell;
+								hint_level = 1;
+							} catch(Z3Exception e) {
+								System.out.println(e.getMessage());
+							}
+						}
 					} else {
 						try {
 							hint_cell_value = smt.findValue(new_hint_cell.getRow(), new_hint_cell.getColumn(), puzzle);
