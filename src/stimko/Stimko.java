@@ -65,7 +65,7 @@ public class Stimko
 			
 			//DEBUG:
 			
-			puzzle.emptyPuzzle(6);
+			puzzle.emptyPuzzle(5);
 			puzzle = smt.generate(puzzle);
 			
 			

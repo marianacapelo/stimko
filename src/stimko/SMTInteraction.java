@@ -718,27 +718,60 @@ public class SMTInteraction
 					for(ArrayList<BoardCell> bad_stream : bad_streams) {
 						
 						boolean matches = true;
-						for(check_n = 0; check_n < size_stream ; check_n++) {
-							BoardCell bad_stream_cell = bad_stream.get(check_n);
-							BoardCell current_stream_cell = stream.get(check_n);
-							if(bad_stream_cell.getRow() != current_stream_cell.getRow() ||
-									bad_stream_cell.getColumn() != current_stream_cell.getColumn()) {
-								matches = false;
-								break;
+						boolean matching ;
+						//Check if every cell in current stream is present in the bad stream
+						int k;
+						int matching_index = -1;
+						for(k=0 ; k<size_stream && matches; k++) {
+							
+							matching = false;
+							BoardCell current_stream_cell = stream.get(k);
+							for(check_n = 0; check_n < n && !matching; check_n++) {
+								BoardCell bad_stream_cell = bad_stream.get(check_n);
+								if(bad_stream_cell.getRow() == current_stream_cell.getRow() &&
+										bad_stream_cell.getColumn() == current_stream_cell.getColumn()) {
+									matching = true;
+									//Store index in bad_stream of the matching cell of current target 
+									if(k==size_stream-1) {
+										matching_index = check_n;
+									}
+								}
 							}
+							matches = matches && matching;
+							
 						}
+						
 						
 						if(matches) {
 							
-							BoardCell bad_neighbor = bad_stream.get(size_stream);
-							for (Iterator<BoardCell> iterator = neighbors.iterator(); iterator.hasNext(); ) {
-							    BoardCell neighbor = iterator.next();
-							    if(neighbor.getColumn() == bad_neighbor.getColumn() && 
-										neighbor.getRow() == bad_neighbor.getRow()) {
-							        iterator.remove();
-							        break;
+							int bad_neighbor_index = 0;
+							if(matching_index < n-1) {
+								bad_neighbor_index = matching_index+1;
+								BoardCell bad_neighbor = bad_stream.get(bad_neighbor_index);
+								for (Iterator<BoardCell> iterator = neighbors.iterator(); iterator.hasNext(); ) {
+								    BoardCell neighbor = iterator.next();
+								    if(neighbor.getColumn() == bad_neighbor.getColumn() && 
+											neighbor.getRow() == bad_neighbor.getRow()) {
+								        iterator.remove();
+								        break;
+									}
 								}
 							}
+							if(matching_index > 0) {
+								bad_neighbor_index = matching_index-1;
+								BoardCell bad_neighbor = bad_stream.get(bad_neighbor_index);
+								for (Iterator<BoardCell> iterator = neighbors.iterator(); iterator.hasNext(); ) {
+								    BoardCell neighbor = iterator.next();
+								    if(neighbor.getColumn() == bad_neighbor.getColumn() && 
+											neighbor.getRow() == bad_neighbor.getRow()) {
+								        iterator.remove();
+								        break;
+									}
+								}
+							}
+							
+							
+							
 						}
 					}
 					
