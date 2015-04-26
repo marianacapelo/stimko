@@ -320,31 +320,482 @@ public class SMTInteraction
         }
 	}
 	
-	public StimkoData populatePuzzle(StimkoData empty)
+	
+	public boolean unique_solution(Solver s, Context c, int n, ArrayList<ArrayList<Integer>> board_values, IntExpr[][] positions ) throws Z3Exception 
 	{
-		//O que fazer...
+			
+		boolean single = true;
 		
-		// Num novo contexto, com um novo solver:
+		Model first_model = s.getModel();
 		
-		//Passo 1 - regras de tabuleiro: colunas e linhas
+		s.push();
 		
-		//Passo 2 - regras de tabuleiro: streams
+		Expr[][] R = new Expr[n][n];
+		BoolExpr bool_exp = c.mkTrue();
+
+		for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++) {
+            	
+            	//Only deny assignments of values that do not belong to the original board values
+            	if(board_values.get(i).get(j)!=0) {
+	            	R[i][j] = first_model.evaluate(positions[i][j], false);
+	            	int val = Integer.parseInt(R[i][j].toString());
+	            	
+	            	if( val != 0 ) {
+	            		
+	            		bool_exp = c.mkAnd(
+	            					(BoolExpr) 
+	    								c.mkNot(c.mkEq(positions[i][j], c.mkInt(val))),
+										bool_exp);
+	            	}
+            	}
+            }
 		
+		System.out.println(s.toString());
+		s.add(bool_exp);
+		System.out.println(s.toString());
+
+		if(s.check() == Status.SATISFIABLE) {
+			single = false;
+		}
 		
-		//Passo 3 - definir percentagem de preenchimento desejada.
-		// Enquanto não se atingir a percentagem:
-		//  - Push e Assert de um número que esteja empty com valor random.
-		//  - Satisfazivel ? 
-		// Se sim, guardar valor e continuar. 
-		// Se não, pop.
+		s.pop();
 		
-		//Passo 6 - Assign de this.solvers e por aí com os utilizados.
-		
-		//Passo 5 - Devolver o puzzle populado  
-		
-		
+		return single;
 		
 	}
 
 
+	public StimkoData generate(StimkoData empty) throws Z3Exception
+	{
+			
+		boolean success = false;
+		Context new_ctx = null;
+		Solver new_solver= null;
+		IntExpr[][] new_original_positions= null;
+		ArrayList<ArrayList<Integer>> new_board_values= null;
+
+		while(!success) {
+			//O que fazer...
+			new_ctx = new Context();
+			new_solver = new_ctx.mkSolver();
+			
+			// Num novo contexto, com um novo solver, preparar expressões para as posições novas.
+			
+			int n  = empty.getN();
+			
+			new_original_positions = new IntExpr[n][];
+	        for (int i = 0; i < n; i++)
+	        {
+	            new_original_positions[i] = new IntExpr[n];
+	            for (int j = 0; j < n; j++)
+	                new_original_positions[i][j] = (IntExpr) new_ctx.mkConst(
+	                        new_ctx.mkSymbol("x_" + (i + 1) + "_" + (j + 1)),
+	                        new_ctx.getIntSort());
+	        }
+	
+			//Passo 1 - criar regras de tabuleiro sobre colunas e linhas
+	        // each cell contains a value in {1, ..., n}
+	        BoolExpr[][] cells_c = new BoolExpr[n][];
+	        for (int i = 0; i < n; i++)
+	        {
+	            cells_c[i] = new BoolExpr[n];
+	            for (int j = 0; j < n; j++)
+	                cells_c[i][j] = new_ctx.mkAnd(new_ctx.mkLe(new_ctx.mkInt(1), new_original_positions[i][j]),
+	                        new_ctx.mkLe(new_original_positions[i][j], new_ctx.mkInt(n)));
+	        }
+			
+	        // each row contains a digit at most once
+	        BoolExpr[] rows_c = new BoolExpr[n];
+	        for (int i = 0; i < n; i++)
+	            rows_c[i] = new_ctx.mkDistinct(new_original_positions[i]);
+	
+	        // each column contains a digit at most once
+	        BoolExpr[] cols_c = new BoolExpr[n];
+	        for(int col = 0; col<n ; col++) {
+	        	
+	        	IntExpr[] col_int_exp = new IntExpr[n];
+		        for (int j = 0; j < n; j++) {
+		        	col_int_exp[j] = new_original_positions[j][col];
+		        }
+	            cols_c[col] = new_ctx.mkDistinct(col_int_exp);
+	        }
+	
+	        
+	        //Passo 2 - conjugar regras criadas até ao momento
+	        
+	        BoolExpr stimko_c = new_ctx.mkTrue();
+	        for (BoolExpr[] t : cells_c)
+	        	stimko_c = new_ctx.mkAnd(new_ctx.mkAnd(t), stimko_c);
+	        
+	        stimko_c = new_ctx.mkAnd(new_ctx.mkAnd(rows_c), stimko_c);
+	        
+	        stimko_c = new_ctx.mkAnd(new_ctx.mkAnd(cols_c), stimko_c);
+	        
+	        new_solver.add(stimko_c);
+	        
+	        
+	        
+	        //Passo 3 - gerar streams e adicionar regras de tabuleiro quanto streams
+	        
+			System.out.println("Generating puzzle structure");
+
+	        // each stream contains a digit at most once
+	        BoolExpr[] streams_c = new BoolExpr[1];
+	        ArrayList<ArrayList<BoardCell>> streams;
+	        boolean done = false;
+	        int n_streams;
+	        while (!done)
+	        {
+	        	
+	        	boolean trying = true;
+	        	streams = new ArrayList<ArrayList<BoardCell>>();
+	        	empty.setStreams(streams);
+	    		n_streams = 0;
+	    		ArrayList<ArrayList<BoardCell>> bad_streams = new ArrayList<ArrayList<BoardCell>>();
+	        	while(trying && n_streams < n) {
+		        	
+	        		new_solver.push();
+		
+		            ArrayList<BoardCell> current_solver_stream = generateNewStream(empty, n_streams, bad_streams);
+		            
+		            if(current_solver_stream == null) {
+		            	trying = false; break;
+		            }
+		            
+		            //Create expression for the n cells in the stream
+		            IntExpr[] cells_stream = new IntExpr[n];
+		            
+		        	//Fetch each cell of the stream
+		            for (int j0 = 0; j0 < n; j0++)
+		            {
+		            	BoardCell current_solver_cell = current_solver_stream.get(j0);
+		            	int row = current_solver_cell.getRow();
+		            	int column = current_solver_cell.getColumn();
+		            	
+		            	cells_stream[j0] = new_original_positions[row][column];
+		            }
+		            
+		            streams_c[0] = new_ctx.mkDistinct(cells_stream);
+		            
+		            new_solver.add(streams_c);
+		            
+		            if(new_solver.check() == Status.SATISFIABLE) {
+		            	System.out.println("Generated a stream");
+		            	streams.add(current_solver_stream);
+		            	empty.setStreams(streams);
+		            	n_streams ++;
+		            	if(n_streams == n) done = true;
+		            	else bad_streams = new ArrayList<ArrayList<BoardCell>>();
+		            	
+		            } else {
+		            	bad_streams.add(current_solver_stream);
+		            	new_solver.pop();
+		            	System.out.println("Undone a stream");
+		            }
+	        	}
+	        	
+	        	if(!trying) {
+	        		//Try failed!
+	        		//Pop all formulas added
+	        		for(int p = 0; p<=n_streams; p++) {
+	        			new_solver.pop();
+	        		}        	
+	        		System.out.println("Restarting streams");
+	        	}
+	        }
+	        
+			
+			//Passo 4 - definir percentagem de preenchimento desejada.
+	
+	        double wanted_percentage = 0.5;
+	        int n_wanted_cells = (int) (wanted_percentage * n * n);
+	        int n_current_cells = 0;
+	        
+	        System.out.println("Generating puzzle values");
+
+	        new_board_values = new ArrayList<ArrayList<Integer>>(n);
+			for(int i = 0 ; i < n ; i++) {
+				ArrayList<Integer> r = new ArrayList<Integer>(n);
+				for(int j = 0 ; j< n ; j++) {
+					r.add(0);
+				}
+				new_board_values.add(r);
+			}
+			
+			
+	        // Enquanto não se atingir a percentagem:
+	        while(n_current_cells < n_wanted_cells) {
+	        	
+				//  - Push 
+	        	new_solver.push();
+	        	
+	        	// - Encontrar random célula vazia 
+	        	int column = 0;
+	        	int row = 0;
+	        	boolean found_random_empty_cell = false;
+				int High = n;
+				while(!found_random_empty_cell) {
+	        		
+	        		Random r_1 = new Random();
+	    			row = r_1.nextInt(High);
+	    			
+	    			Random r_2 = new Random();
+	    			column = r_2.nextInt(High);
+	    			
+	    			if(new_board_values.get(row).get(column) == 0) {
+	    				found_random_empty_cell = true;
+	    			}
+	        	}
+				
+	        	// - Fetch valor válido de um dos modelos
+				
+				
+	        	Model m = new_solver.getModel();
+	        	IntExpr p = new_original_positions[row][column];
+	        	Expr from_model = m.evaluate(p, false);
+	        	
+	        	int value = Integer.parseInt(from_model.toString());
+	        	
+	        	// - Assert do valor na célula
+	        	IntExpr position = new_original_positions[row][column];
+	        	BoolExpr play_c = new_ctx.mkTrue();
+	        	
+	        	IntExpr number = new_ctx
+	        			.mkInt(value);
+	        	play_c = new_ctx.mkEq(number, position);
+	        	
+	        	new_solver.add(play_c);
+	        	
+				//  - SATISFIABLE ? 
+	    		if (new_solver.check() == Status.SATISFIABLE) {
+	    			// Se sim, guardar valor e continuar. 
+	    			(new_board_values.get(row)).set(column, value);
+	    			n_current_cells ++;
+	                System.out.println("Generated a value.");
+	            } else {
+	            	// Se não, pop.
+	            	new_solver.pop();
+	            	System.out.println("Undone a value");
+	            }
+		        	
+	        }
+	       
+	        System.out.println("Making sure puzzle as an unique solution");
+	        if(unique_solution(new_solver,new_ctx,n,new_board_values,new_original_positions)) {
+				success = true;
+	        } 
+		}
+		
+		//Passo 6 - Assign de this.solvers e por aí com os utilizados.
+	    this.ctx = new_ctx;
+		this.current_solver = new_solver;
+		this.original_solver = new_solver; //TODO clone
+	    this.original_positions = new_original_positions;
+	    
+		//Passo 5 - Devolver o puzzle populado  
+		empty.setBoardValues(new_board_values);
+		return empty;
+		
+		
+	}
+	
+	public ArrayList<BoardCell> generateNewStream(StimkoData puzzle, int n_stream, ArrayList<ArrayList<BoardCell>> bad_streams)
+	{
+		
+		//Generate random streams
+		
+		int n = puzzle.getN();
+
+		ArrayList<ArrayList<Integer>> board = puzzle.getBoard();
+		
+
+		boolean done = false;
+		boolean alive = true;
+		boolean reverting;	
+		BoardCell target = null;
+		ArrayList<BoardCell> stream = null;
+		ArrayList<BoardCell> tried_targets = new ArrayList<BoardCell>();
+		
+		
+		while(!done) {
+		
+			alive = true;
+			reverting = false;
+			stream = new ArrayList<BoardCell>();
+			target = null;
+
+			//Find starting cell for stream
+			int n_r = 0;
+			//Find cell that is not in any streams or was already tried as first target
+			for(ArrayList<Integer> r : board) {
+				int n_c = 0;
+				for(Integer v : r) {
+					
+					boolean tried = false;
+					for(BoardCell tried_target : tried_targets) {
+						if(tried_target.getColumn() == n_c && tried_target.getRow()==n_r) {
+							tried = true; break;
+						}
+					}
+					
+					if(!tried && puzzle.findStream(n_r,n_c)==null) {
+						target = new BoardCell(n_r,n_c);
+						break;
+					}
+					n_c++;
+				}
+				if(target!= null) {
+					break;
+				}
+				n_r++;
+			}
+			
+			if(target==null) {
+				alive = false;
+			} else {
+				stream.add(target);
+			}
+		
+				
+			int size_stream = 1;
+			boolean can_block;
+			
+			// Starting of loop to construct stream
+			while( alive && (size_stream<n) ) {
+				
+				can_block = (n_stream == n-1);
+				
+				//Find one random neighbor that is not in any stream
+				
+				ArrayList<BoardCell> neighbors = new ArrayList<BoardCell>();
+				
+				ArrayList<Integer> possible_n_r = new ArrayList<Integer>();
+				int col = target.getColumn();
+				int row = target.getRow();
+				if(row != 0) {
+					possible_n_r.add(row-1);					
+				}
+				if(row != n-1) {
+					possible_n_r.add(row+1);
+				}
+				possible_n_r.add(row);
+				ArrayList<Integer> possible_n_c = new ArrayList<Integer>();
+				if(col != 0) {
+					possible_n_c.add(col-1);					
+				}
+				if(col != n-1) {
+					possible_n_c.add(col+1);
+				}
+				possible_n_c.add(col);
+				
+				for(Integer possible_row : possible_n_r) {
+					for(Integer possible_col : possible_n_c) {
+						
+						//Exclude own cell
+						if(!(possible_row==row && possible_col == col)) {
+							BoardCell neighbor = new BoardCell(possible_row,possible_col);
+							//Check if neighbor in any stream
+							boolean in_current_stream = false;
+							for(int k = 0; k < size_stream ; k++) {
+								if(stream.get(k).getColumn() == possible_col && stream.get(k).getRow() == possible_row)
+									in_current_stream = true;
+							}
+							if(!in_current_stream && puzzle.findStream(possible_row, possible_col) == null && (can_block || !puzzle.hasDirectlyDependentNeighbour(possible_row,possible_col, stream) )) {
+								neighbors.add(neighbor);
+							}
+						}
+					}
+				}
+				
+				int n_original_neighbors = neighbors.size();
+				
+				//If forming stream is nearly formed and matches a bad stream received, remove the appropriate neighbours in order to avoid loops
+				
+				if(reverting || size_stream == n-1) {
+					int check_n;
+	
+					for(ArrayList<BoardCell> bad_stream : bad_streams) {
+						
+						boolean matches = true;
+						for(check_n = 0; check_n < size_stream ; check_n++) {
+							BoardCell bad_stream_cell = bad_stream.get(check_n);
+							BoardCell current_stream_cell = stream.get(check_n);
+							if(bad_stream_cell.getRow() != current_stream_cell.getRow() ||
+									bad_stream_cell.getColumn() != current_stream_cell.getColumn()) {
+								matches = false;
+								break;
+							}
+						}
+						
+						if(matches) {
+							
+							BoardCell bad_neighbor = bad_stream.get(size_stream);
+							for (Iterator<BoardCell> iterator = neighbors.iterator(); iterator.hasNext(); ) {
+							    BoardCell neighbor = iterator.next();
+							    if(neighbor.getColumn() == bad_neighbor.getColumn() && 
+										neighbor.getRow() == bad_neighbor.getRow()) {
+							        iterator.remove();
+							        break;
+								}
+							}
+						}
+					}
+					
+				}
+	
+				int n_final_neighbors = neighbors.size();
+				
+				if(neighbors.size() == 0 ){
+					
+					if(n_original_neighbors != n_final_neighbors) {
+						reverting = true;
+					}
+					
+					if(reverting && size_stream > 1) {
+						//Remove last target and decrement size_stream;
+						stream.remove(size_stream-1);
+						target = stream.get(size_stream-2);
+						size_stream--;
+					} else {						
+						alive = false;
+					}
+				} else {
+				
+					Random r = new Random();
+					BoardCell random_neighbor ;
+					if(neighbors.size() > 1) {
+						int High = neighbors.size();
+						int random_index = r.nextInt(High);
+		
+						random_neighbor = neighbors.get(random_index);
+					} else {
+						random_neighbor = neighbors.get(0);
+					}
+					stream.add(random_neighbor);
+					target = random_neighbor;
+					size_stream++;
+				}
+				
+			}
+				
+			// End of loop to construct stream
+			
+			if(!alive) {
+				if(reverting)
+					tried_targets.add(stream.get(0));
+				else
+					done = true;
+			} else {
+				done = true;
+			}	
+		
+		}
+		
+		if(!alive) return null;
+		
+		return stream;
+			
+	}
+	
 }
