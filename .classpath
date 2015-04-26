@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry exported="true" kind="lib" path="/Users/Mariana/Documents/z3/build/com.microsoft.z3.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/Mariana/Downloads/JCDP-1.25-win/jansi-1.4.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/Mariana/Downloads/JCDP-1.25-win/JCDP-1.25-win.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
